@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+
+    <springProfile name="prod">
+        <property name="LOG_PATH" value="/root/deploy/acrs/etlLogs" />
+    </springProfile>
+
+    <springProfile name="sim">
+        <property name="LOG_PATH" value="/home/sgather/etlLogs" />
+    </springProfile>
+
+    <appender name="OUT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>${LOG_PATH}/out.log</File>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/out-%d{yyyyMMdd}.log.%i</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>15</maxHistory>
+        </rollingPolicy>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} -%msg%n</Pattern>
+        </layout>
+    </appender>
+
+    <logger name="root" level="INFO">
+        <!--<appender-ref ref="OUT_FILE" />-->
+    </logger>
+</configuration>

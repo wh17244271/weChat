@@ -1,0 +1,712 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.suypower.venus.elec.common.dao.DaConsDataDao">
+    <!--da_cons_gather_data 表基础字段 -->
+    <sql id="baseColumn">
+        gatherData.CONS_NO AS consNo,
+         gatherData.U_TYPE_NO AS unitTypeNo,
+                gatherData.IND_B_NO AS indBNo,
+        gatherData.DATA_DATE AS dataDate,
+        gatherData.MONTH AS month,
+        gatherData.LAST_TIME AS lastTime,
+        gatherData.LAST_VAL AS lastVal,
+        gatherData.MIN_TIME AS minTime,
+        gatherData.MIN_VAL AS minVal,
+        gatherData.MAX_TIME AS maxTime,
+        gatherData.MAX_VAL AS maxVal,
+        gatherData.AVG_VAL AS avgVal
+    </sql>
+
+    <sql id="startFillDayLoadAll">
+        <if test="daConsQuery.fill != null and daConsQuery.fill != ''">
+            SELECT
+            sup.CONS_NO ,sup.CONS_NAME,sup.IND_B_NO,sup.U_TYPE_NO ,sup.DATE ,sup.MONTH ,sup.YEAR ,dt.*
+            FROM
+            (
+            SELECT cons.CONS_NO,cons.CONS_NAME,ind.IND_B_NO,unit.U_TYPE_NO,
+            `day`.DATE,`day`. MONTH,`day`. YEAR FROM
+            (
+            SELECT CONS_NO,CONS_NAME FROM CS_H_CONS_INFO
+            <where>
+                <if test="daConsQuery.consNo != null and daConsQuery.consNo != ''">
+                    CONS_NO = #{daConsQuery.consNo}
+                </if>
+            </where>
+            ) cons,
+            (
+            SELECT DISTINCT type.U_TYPE_NO FROM cs_unit_type_info type
+            JOIN cs_unit_type_ind_rel_info rel ON type.U_TYPE_ID = rel.U_TYPE_ID
+            <where>
+                <if test="value != null and value.size>0 ">
+                    rel.IND_NO IN
+                    <foreach collection="value" item="item" open="(" separator="," close=")">
+                        CONCAT('20', #{item.indBNo})
+                    </foreach>
+                </if>
+            </where>
+            ) unit,
+            (
+            SELECT SUBSTRING(IND_NO,3)IND_B_NO from cs_unit_type_ind_rel_info
+            <where>
+                <if test="value != null and value.size>0 ">
+                    AND IND_NO IN
+                    <foreach collection="value" item="item" open="(" separator="," close=")">
+                        CONCAT('20', #{item.indBNo})
+                    </foreach>
+                </if>
+            </where>
+            ) ind,
+            (
+            SELECT DATE,`MONTH`,`YEAR` FROM DA_CALENDAR_DAY
+            <where>
+                <if test="daConsQuery.dataDates != null and daConsQuery.dataDates != ''">
+                    AND DATE in
+                    <foreach collection="daConsQuery.dataDates" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="daConsQuery.dataMonths != null and daConsQuery.dataMonths != ''">
+                    AND MONTH in
+                    <foreach collection="daConsQuery.dataMonths" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </where>
+            ) DAY
+            order by date
+            ) sup
+            LEFT JOIN (
+        </if>
+    </sql>
+
+    <!--  获取企业日类型数据  -->
+    <!--    按月获取企业日数据-->
+    <select id="queryConsDayData" resultType="java.util.LinkedHashMap">
+
+        <foreach collection="tableIndxesMap" index="key" item="value" separator="union">
+            <include refid="startFillDayLoadAll"/>
+            SELECT
+            consInfo.CONS_NAME,consInfo.ORG_NO,gatherData.*
+            FROM
+            (select * from ${key} gatherData
+            <where>
+                <if test="daConsQuery.consNo != null and daConsQuery.consNo != ''">
+                    AND gatherData.CONS_NO = #{daConsQuery.consNo}
+                </if>
+                <if test="daConsQuery.unitTypes != null and daConsQuery.unitTypes != ''">
+                    AND gatherData.U_TYPE_NO IN
+                    <foreach collection="daConsQuery.unitTypes" item="item" open="(" separator="," close=")">
+                        #{item.unitTypeNo}
+                    </foreach>
+                </if>
+                <if test="value != null and value.size>0 ">
+                    AND gatherData.IND_B_NO IN
+                    <foreach collection="value" item="item" open="(" separator="," close=")">
+                        #{item.indBNo}
+                    </foreach>
+                </if>
+                <if test="daConsQuery.dataDates != null and daConsQuery.dataDates != ''">
+                    AND gatherData.DATA_DATE in
+                    <foreach collection="daConsQuery.dataDates" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="daConsQuery.dataMonths != null and daConsQuery.dataMonths != ''">
+                    AND gatherData.MONTH in
+                    <foreach collection="daConsQuery.dataMonths" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+
+                </if>
+            </where>
+
+            ) gatherData
+            JOIN CS_H_CONS_INFO consInfo
+            ON gatherData.CONS_NO = consInfo.CONS_NO
+            <if test="daConsQuery.fill != null and daConsQuery.fill != ''">
+                )dt ON
+                dt.CONS_NO = sup.CONS_NO and dt.IND_B_NO = sup.IND_B_NO
+                and dt.DATA_DATE =sup.DATE AND dt.U_TYPE_NO = sup.U_TYPE_NO
+            </if>
+        </foreach>
+        <if test="daConsQuery.fill == null or daConsQuery.fill == ''">
+            order by DATA_DATE
+        </if>
+
+
+    </select>
+
+    <sql id="startFillDayLoad">
+        <if test="daConsQuery.fill != null and daConsQuery.fill != ''">
+            SELECT
+            sup.CONS_NO AS consNo,sup.CONS_NAME as consName,sup.IND_B_NO AS indBNo,sup.U_TYPE_NO AS unitTypeNo,
+            sup.DATE AS date,sup. MONTH AS month,sup. YEAR AS year,dt.*
+            FROM
+            (
+            SELECT cons.CONS_NO,cons.CONS_NAME,ind.IND_B_NO,unit.U_TYPE_NO,
+            `day`.DATE,`day`. MONTH,`day`. YEAR FROM
+            (
+            SELECT CONS_NO,CONS_NAME FROM CS_H_CONS_INFO
+            <where>
+                <if test="daConsQuery.consNo != null and daConsQuery.consNo != ''">
+                    CONS_NO = #{daConsQuery.consNo}
+                </if>
+            </where>
+            ) cons,
+            (
+            SELECT DISTINCT type.U_TYPE_NO FROM cs_unit_type_info type
+            JOIN cs_unit_type_ind_rel_info rel ON type.U_TYPE_ID = rel.U_TYPE_ID
+            <where>
+                <if test="value != null and value.size>0 ">
+                    rel.IND_NO IN
+                    <foreach collection="value" item="item" open="(" separator="," close=")">
+                        CONCAT('20', #{item.indBNo})
+                    </foreach>
+                </if>
+            </where>
+            ) unit,
+            (
+            SELECT SUBSTRING(IND_NO,3)IND_B_NO from cs_unit_type_ind_rel_info
+            <where>
+                <if test="value != null and value.size>0 ">
+                    AND IND_NO IN
+                    <foreach collection="value" item="item" open="(" separator="," close=")">
+                        CONCAT('20', #{item.indBNo})
+                    </foreach>
+                </if>
+            </where>
+            ) ind,
+            (
+            SELECT DATE,`MONTH`,`YEAR` FROM DA_CALENDAR_DAY
+            <where>
+                <if test="daConsQuery.dataDates != null and daConsQuery.dataDates != ''">
+                    AND DATE in
+                    <foreach collection="daConsQuery.dataDates" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="daConsQuery.dataMonths != null and daConsQuery.dataMonths != ''">
+                    AND MONTH in
+                    <foreach collection="daConsQuery.dataMonths" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </where>
+            ) DAY
+            order by date
+            ) sup
+            LEFT JOIN (
+        </if>
+    </sql>
+    <sql id="endFillDayLoad">
+        <if test="daConsQuery.fill != null and daConsQuery.fill != ''">
+            )dt ON dt.consNo = sup.CONS_NO and dt.indBNo = sup.IND_B_NO
+            and dt.dataDate =sup.DATE AND dt.unitTypeNo = sup.U_TYPE_NO
+        </if>
+    </sql>
+    <!--  获取企业日最值数据 -->
+    <!--    按月获取企业日最值数据-->
+    <select id="queryConsMostData" resultType="com.suypower.venus.elec.common.entity.DaConsDayMostData">
+        <foreach collection="tableIndxesMap" index="key" item="value" separator="union">
+            <include refid="startFillDayLoad"/>
+            SELECT
+            consInfo.CONS_NAME as consName,consInfo.ORG_NO as orgNo,
+            gatherData.*
+            FROM (
+            select
+            <include refid="baseColumn"/>
+            from ${key} gatherData
+            <where>
+                <if test="daConsQuery.consNo != null and daConsQuery.consNo != ''">
+                    AND gatherData.CONS_NO = #{daConsQuery.consNo}
+                </if>
+                <if test="daConsQuery.unitTypes != null and daConsQuery.unitTypes != ''">
+                    AND gatherData.U_TYPE_NO IN
+                    <foreach collection="daConsQuery.unitTypes" item="item" open="(" separator="," close=")">
+                        #{item.unitTypeNo}
+                    </foreach>
+                </if>
+                <if test="value != null and value.size>0 ">
+                    AND gatherData.IND_B_NO IN
+                    <foreach collection="value" item="item" open="(" separator="," close=")">
+                        #{item.indBNo}
+                    </foreach>
+                </if>
+                <if test="daConsQuery.dataDates != null and daConsQuery.dataDates != ''">
+                    AND gatherData.DATA_DATE in
+                    <foreach collection="daConsQuery.dataDates" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="daConsQuery.dataMonths != null and daConsQuery.dataMonths != ''">
+                    AND gatherData.MONTH in
+                    <foreach collection="daConsQuery.dataMonths" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </where>
+
+            )gatherData
+            JOIN CS_H_CONS_INFO consInfo
+            ON gatherData.consNo = consInfo.CONS_NO
+            <include refid="endFillDayLoad"/>
+        </foreach>
+
+        <if test="daConsQuery.fill == null or daConsQuery.fill == ''">
+            order by dataDate
+        </if>
+
+    </select>
+
+
+    <!--  获取企业月数据 -->
+    <!--    按年获取企业月数据-->
+    <select id="queryConsMonthData" resultType="com.suypower.venus.elec.common.entity.DaConsMonthData">
+        <include refid="startFillMonth"/>
+        select * from (
+        SELECT
+        consInfo.CONS_NAME as consName,consInfo.ORG_NO as orgNo,
+        gatherData.*
+
+        FROM (
+        select
+        gatherData.CONS_NO AS consNo,
+
+        gatherData.U_TYPE_NO AS unitTypeNo,
+        gatherData.IND_B_NO AS indBNo,
+
+        gatherData.DATA_MONTH AS dataMonth,
+        gatherData.MIN_TIME AS minTime,
+        gatherData.MIN_VAL AS minVal,
+        gatherData.MAX_TIME AS maxTime,
+        gatherData.MAX_VAL AS maxVal,
+        gatherData.AVG_VAL AS avgVal
+        from
+        DA_CONS_MONTH_LOAD_DATA gatherData
+        <where>
+            <if test="consNo != null and consNo != ''">
+                AND gatherData.CONS_NO = #{consNo}
+            </if>
+            <if test="unitTypes != null and unitTypes != ''">
+                AND gatherData.U_TYPE_NO IN
+                <foreach collection="unitTypes" item="item" open="(" separator="," close=")">
+                    #{item.unitTypeNo}
+                </foreach>
+            </if>
+            <if test="indexes != null and indexes != ''">
+                AND gatherData.IND_B_NO IN
+                <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                    #{item.indBNo}
+                </foreach>
+            </if>
+            <if test="dataMonths != null and dataMonths != ''">
+                AND gatherData.DATA_MONTH in
+                <foreach collection="dataMonths" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dataYears != null and dataYears != ''">
+
+                and
+                <foreach collection="dataYears" item="item" open="(" separator="or" close=")">
+                    gatherData.DATA_MONTH LIKE CONCAT(#{item},'%')
+                </foreach>
+
+            </if>
+        </where>
+
+        )gatherData
+
+        JOIN CS_H_CONS_INFO consInfo
+        ON gatherData.consNo = consInfo.CONS_NO
+        )as last
+        order by dataMonth
+        <include refid="endFillMonth"/>
+    </select>
+
+    <sql id="powerBase">
+        powerData.CONS_NO AS consNo,
+
+        powerData.U_TYPE_NO AS unitTypeNo,
+        powerData.IND_B_NO AS indBNo,
+
+        powerData.DATA_DATE AS dataDate,
+        powerData.SP_Q AS tip,
+        powerData.P_Q AS peak,
+        powerData.M_Q AS flat,
+        powerData.V_Q AS valley,
+        powerData.TOTAL_Q AS total
+    </sql>
+    <sql id="startFillDay">
+        <if test="fill != null and fill != ''">
+            SELECT
+            sup.CONS_NO AS consNo,sup.CONS_NAME as consName,sup.IND_B_NO AS indBNo,sup.U_TYPE_NO AS unitTypeNo,
+            sup.DATE AS date,sup. MONTH AS month,sup. YEAR AS year,dt.*
+            FROM
+            (
+            SELECT cons.CONS_NO,cons.CONS_NAME,ind.IND_B_NO,unit.U_TYPE_NO,
+            `day`.DATE,`day`. MONTH,`day`. YEAR FROM
+            (
+            SELECT CONS_NO,CONS_NAME FROM CS_H_CONS_INFO
+            <where>
+                <if test="consNo != null and consNo != ''">
+                    CONS_NO = #{consNo}
+                </if>
+            </where>
+            ) cons,
+            (
+            SELECT DISTINCT type.U_TYPE_NO FROM cs_unit_type_info type
+            JOIN cs_unit_type_ind_rel_info rel ON type.U_TYPE_ID = rel.U_TYPE_ID
+            <where>
+                <if test="indexes != null and indexes != ''">
+                    rel.IND_NO IN
+                    <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                        CONCAT('20', #{item.indBNo})
+                    </foreach>
+                </if>
+            </where>
+            ) unit,
+            (
+            SELECT SUBSTRING(IND_NO,3)IND_B_NO from cs_unit_type_ind_rel_info
+            <where>
+                <if test="indexes != null and indexes != ''">
+                    AND IND_NO IN
+                    <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                        CONCAT('20', #{item.indBNo})
+                    </foreach>
+                </if>
+            </where>
+            ) ind,
+            (
+            SELECT DATE,`MONTH`,`YEAR` FROM DA_CALENDAR_DAY
+            <where>
+                <if test="dataDates != null and dataDates != ''">
+                    AND DATE in
+                    <foreach collection="dataDates" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="dataMonths != null and dataMonths != ''">
+                    AND MONTH in
+                    <foreach collection="dataMonths" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </where>
+            ) DAY
+            ) sup
+            LEFT JOIN (
+        </if>
+    </sql>
+    <sql id="endFillDay">
+        <if test="fill != null and fill != ''">
+            )dt ON dt.consNo = sup.CONS_NO and dt.indBNo = sup.IND_B_NO
+            and dt.dataDate =sup.DATE AND dt.unitTypeNo = sup.U_TYPE_NO
+            ORDER BY sup.CONS_NO ,sup.date
+        </if>
+    </sql>
+    <!--    获取企业日用量数据-->
+    <!--    按月获取企业日用量数据-->
+    <select id="queryConsDayDosageData" resultType="com.suypower.venus.elec.common.entity.DaConsDayDosageData">
+        <include refid="startFillDay"/>
+        select * from (
+        SELECT
+        consInfo.CONS_NAME AS consName,
+        consInfo.ORG_NO AS orgNo,
+
+        powerData.*
+        FROM (
+        select
+        powerData.MONTH as month,
+        <include refid="powerBase"/>
+        from DA_CONS_DAY_POWER_DATA powerData
+        WHERE
+        1 = 1
+        <if test="consNo != null and consNo != ''">
+            AND powerData.CONS_NO = #{consNo}
+        </if>
+        <if test="unitTypes != null and unitTypes != ''">
+            AND powerData.U_TYPE_NO IN
+            <foreach collection="unitTypes" item="item" open="(" separator="," close=")">
+                #{item.unitTypeNo}
+            </foreach>
+        </if>
+        <if test="indexes != null and indexes != ''">
+            AND powerData.IND_B_NO IN
+            <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                #{item.indBNo}
+            </foreach>
+        </if>
+        <if test="dataDates != null and dataDates != ''">
+            AND powerData.DATA_DATE in
+            <foreach collection="dataDates" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dataMonths != null and dataMonths != ''">
+            AND powerData.MONTH in
+            <foreach collection="dataMonths" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        )powerData
+
+        JOIN CS_H_CONS_INFO consInfo ON powerData.consNo = consInfo.CONS_NO
+        )as last
+        order by dataDate
+        <include refid="endFillDay"/>
+    </select>
+
+    <sql id="startFillMonth">
+        <if test="fill != null and fill != ''">
+            SELECT
+            sup.CONS_NO AS consNo,sup.CONS_NAME as consName,sup.IND_B_NO AS indBNo,sup.U_TYPE_NO AS unitTypeNo,
+            sup.MONTH AS month,sup.YEAR AS year,dt.*
+            FROM
+            (
+            SELECT cons.CONS_NO,cons.CONS_NAME,ind.IND_B_NO,unit.U_TYPE_NO,
+            mon. MONTH,mon. YEAR FROM
+            (
+            SELECT CONS_NO,CONS_NAME FROM CS_H_CONS_INFO
+            <where>
+                <if test="consNo != null and consNo != ''">
+                    CONS_NO = #{consNo}
+                </if>
+            </where>
+            ) cons,
+            (
+            SELECT DISTINCT type.U_TYPE_NO FROM cs_unit_type_info type
+            JOIN cs_unit_type_ind_rel_info rel ON type.U_TYPE_ID = rel.U_TYPE_ID
+            <where>
+                <if test="indexes != null and indexes != ''">
+                    rel.IND_NO IN
+                    <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                        CONCAT('20', #{item.indBNo})
+                    </foreach>
+                </if>
+            </where>
+            ) unit,
+            (
+            SELECT SUBSTRING(IND_NO,3)IND_B_NO from cs_unit_type_ind_rel_info
+            <where>
+                <if test="indexes != null and indexes != ''">
+                    AND IND_NO IN
+                    <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                        CONCAT('20', #{item.indBNo})
+                    </foreach>
+                </if>
+            </where>
+            ) ind,
+            (
+            SELECT `MONTH`,`YEAR` FROM DA_CALENDAR_MONTH
+            <where>
+                <if test="dataMonths != null and dataMonths != ''">
+                    AND month in
+                    <foreach collection="dataMonths" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="dataYears != null and dataYears != ''">
+
+                    and
+                    <foreach collection="dataYears" item="item" open="(" separator="or" close=")">
+                        YEAR LIKE CONCAT(#{item},'%')
+                    </foreach>
+                </if>
+
+
+            </where>
+            ) mon
+            ) sup
+            LEFT JOIN (
+        </if>
+    </sql>
+    <sql id="endFillMonth">
+        <if test="fill != null and fill != ''">
+            )dt ON dt.consNo = sup.CONS_NO and dt.indBNo = sup.IND_B_NO
+            and dt.dataMonth =sup.MONTH AND dt.unitTypeNo = sup.U_TYPE_NO
+            ORDER BY sup.CONS_NO ,sup.MONTH
+        </if>
+    </sql>
+
+    <!--    获取企业月用量数据-->
+    <!--    按年获取企业月用量数据-->
+    <select id="queryConsMonthDosageData" resultType="com.suypower.venus.elec.common.entity.DaConsMonthDosageData">
+        <include refid="startFillMonth"/>
+        select * from (
+        SELECT
+        consInfo.CONS_NAME AS consName,
+        consInfo.ORG_NO AS orgNo,
+        powerData.*
+        FROM
+        (
+        select
+        powerData.DATA_MONTH as dataMonth,
+        <include refid="powerBase"/>
+        from DA_CONS_MONTH_POWER_DATA powerData
+        WHERE 1=1
+        <if test="consNo != null and consNo != ''">
+            AND powerData.CONS_NO = #{consNo}
+        </if>
+        <if test="unitTypes != null and unitTypes != ''">
+            AND powerData.U_TYPE_NO IN
+            <foreach collection="unitTypes" item="item" open="(" separator="," close=")">
+                #{item.unitTypeNo}
+            </foreach>
+        </if>
+        <if test="indexes != null and indexes != ''">
+            AND powerData.IND_B_NO IN
+            <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                #{item.indBNo}
+            </foreach>
+        </if>
+        <if test="dataMonths != null and dataMonths != ''">
+            AND powerData.DATA_MONTH in
+            <foreach collection="dataMonths" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="dataYears != null and dataYears != ''">
+
+            and
+            <foreach collection="dataYears" item="item" open="(" separator="or" close=")">
+                powerData.DATA_MONTH LIKE CONCAT(#{item},'%')
+            </foreach>
+
+        </if>
+        )powerData
+
+
+        JOIN CS_H_CONS_INFO consInfo ON powerData.consNo = consInfo.CONS_NO
+        )as last
+        order by dataDate
+        <include refid="endFillMonth"/>
+    </select>
+
+
+    <!--   获取企业年用量数据 -->
+    <select id="queryConsYearDosageData" resultType="com.suypower.venus.elec.common.entity.DaConsMonthDosageData">
+        <if test="fill != null and fill != ''">
+            SELECT
+            sup.CONS_NO AS consNo,sup.CONS_NAME as consName,sup.IND_B_NO AS indBNo,sup.U_TYPE_NO AS unitTypeNo,
+            sup.MONTH AS month,sup.YEAR AS year,dt.*
+            FROM
+            (
+            SELECT cons.CONS_NO,cons.CONS_NAME,ind.IND_B_NO,unit.U_TYPE_NO,
+            mon. MONTH,mon. YEAR FROM
+            (
+            SELECT CONS_NO,CONS_NAME FROM CS_H_CONS_INFO
+            <where>
+                <if test="consNo != null and consNo != ''">
+                    CONS_NO = #{consNo}
+                </if>
+            </where>
+            ) cons,
+            (
+            SELECT DISTINCT type.U_TYPE_NO FROM cs_unit_type_info type
+            JOIN cs_unit_type_ind_rel_info rel ON type.U_TYPE_ID = rel.U_TYPE_ID
+            <where>
+                <if test="indexes != null and indexes != ''">
+                    rel.IND_NO IN
+                    <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                        CONCAT('20', #{item.indBNo})
+                    </foreach>
+                </if>
+            </where>
+            ) unit,
+            (
+            SELECT SUBSTRING(IND_NO,3)IND_B_NO from cs_unit_type_ind_rel_info
+            <where>
+                <if test="indexes != null and indexes != ''">
+                    AND IND_NO IN
+                    <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                        CONCAT('20', #{item.indBNo})
+                    </foreach>
+                </if>
+            </where>
+            ) ind,
+            (
+            SELECT `MONTH`,`YEAR` FROM DA_CALENDAR_MONTH
+            <where>
+                <if test="dataMonths != null and dataMonths != ''">
+                    AND month in
+                    <foreach collection="dataMonths" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="dataYears != null and dataYears != ''">
+
+                    and
+                    <foreach collection="dataYears" item="item" open="(" separator="or" close=")">
+                        YEAR LIKE CONCAT(#{item},'%')
+                    </foreach>
+                </if>
+
+
+            </where>
+            ) mon
+            GROUP BY year
+            ) sup
+            LEFT JOIN (
+        </if>
+
+        SELECT
+        consInfo.CONS_NAME AS consName,
+        consInfo.ORG_NO AS orgNo,
+        powerData.*,
+        LEFT(powerData.dataMonth,4) as year
+        FROM
+        (
+        SELECT
+        powerData.DATA_MONTH as dataMonth,
+        powerData.CONS_NO as consNo,
+        powerData.U_TYPE_NO as unitTypeNo,
+        powerData.IND_B_NO as indBNo,
+        SUM(powerData.SP_Q)AS tip,
+        SUM(powerData.P_Q)AS peak,
+        SUM(powerData.M_Q)AS flat,
+        SUM(powerData.V_Q)AS valley,
+        SUM(powerData.TOTAL_Q)AS total
+        from DA_CONS_MONTH_POWER_DATA powerData
+        <where>
+            <if test="consNo != null and consNo != ''">
+                AND powerData.CONS_NO = #{consNo}
+            </if>
+            <if test="unitTypes != null and unitTypes != ''">
+                AND powerData.U_TYPE_NO IN
+                <foreach collection="unitTypes" item="item" open="(" separator="," close=")">
+                    #{item.unitTypeNo}
+                </foreach>
+            </if>
+            <if test="indexes != null and indexes != ''">
+                AND powerData.IND_B_NO IN
+                <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                    #{item.indBNo}
+                </foreach>
+            </if>
+
+            <if test="dataYears != null and dataYears != ''">
+                and
+                <foreach collection="dataYears" item="item" open="(" separator="or" close=")">
+                    powerData.DATA_MONTH LIKE CONCAT(#{item},'%')
+                </foreach>
+
+            </if>
+        </where>
+        GROUP BY powerData.CONS_NO,powerData.U_TYPE_NO,powerData.IND_B_NO,left(powerData.DATA_MONTH,4)
+
+        )powerData
+
+
+        JOIN CS_H_CONS_INFO consInfo ON powerData.consNo = consInfo.CONS_NO
+
+
+        <if test="fill != null and fill != ''">
+            )dt ON dt.consNo = sup.CONS_NO and dt.indBNo = sup.IND_B_NO
+            and dt.year =sup.year AND dt.unitTypeNo = sup.U_TYPE_NO
+            ORDER BY sup.CONS_NO ,sup.year
+        </if>
+    </select>
+
+
+</mapper>

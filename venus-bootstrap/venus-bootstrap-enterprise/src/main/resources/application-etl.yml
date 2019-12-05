@@ -1,0 +1,88 @@
+etl:
+   version: 1.6
+   name: EtlEngine
+   tenantId: 402760961221459968
+   maxProcessRawCount: 50000   #每次最大读取采集记录数
+   enableSmooth: false         #是否启用平滑处理
+   maxSmoothCount: 6           #最大平滑连续处理次数上限
+   indexPrecision:
+      default: ge(10,0,1)      #默认精度
+      '01030013': set(2)       #A相功率因数精度
+      '01030014': set(2)       #B相功率因数精度
+      '01030015': set(2)       #C相功率因数精度
+      '01030016': set(2)       #总率因数精度
+      '01040001': set(2)       #正向有功电能示值
+      '01040002': set(2)       #反向有功电能示值
+      '01040003': set(2)       #正向无功电能示值
+      '01040004': set(2)       #反向无功电能示值
+#开启Etl同步功能
+   synchronize:
+   domains:
+#mp
+      - com.suypower.acrs.etl.process.mp.domain.DaMpDayGatherDataSmooth
+      - com.suypower.acrs.etl.process.mp.domain.DaMpDayGatherData
+      - com.suypower.acrs.etl.process.mp.domain.DaMpDayReadings
+      - com.suypower.acrs.etl.process.mp.domain.DaMpDayUsageData
+      - com.suypower.acrs.etl.process.mp.domain.DaMpDayGatherDataBLine
+
+      - com.suypower.acrs.etl.process.mp.domain.DaMpMonthGatherData
+      - com.suypower.acrs.etl.process.mp.domain.DaMpMonthReadings
+      - com.suypower.acrs.etl.process.mp.domain.DaMpMonthUsageData
+#unit
+      - com.suypower.acrs.etl.process.unit.domain.CsUnitTypeInfo
+      - com.suypower.acrs.etl.process.unit.domain.CsUnitTypeIndRefInfo
+      - com.suypower.acrs.etl.process.unit.domain.CsUnitInfo
+      - com.suypower.acrs.etl.process.unit.domain.CsMpRefUnitInfo
+      - com.suypower.acrs.etl.process.unit.domain.DaUnitDayGatherData
+      - com.suypower.acrs.etl.process.unit.domain.DaUnitDayUsageData
+      - com.suypower.acrs.etl.process.unit.domain.DaUnitDayGatherDataBLine
+
+      - com.suypower.acrs.etl.process.unit.domain.DaUnitMonthGatherData
+      - com.suypower.acrs.etl.process.unit.domain.DaUnitMonthUsageData
+#cons
+      - com.suypower.acrs.etl.process.cons.domain.CsConsRefOrgInfo
+      - com.suypower.acrs.etl.process.cons.domain.DaConsDayGatherData
+      - com.suypower.acrs.etl.process.cons.domain.DaConsDayUsageData
+      - com.suypower.acrs.etl.process.cons.domain.DaConsDayGatherDataBLine
+
+      - com.suypower.acrs.etl.process.cons.domain.DaConsMonthGatherData
+      - com.suypower.acrs.etl.process.cons.domain.DaConsMonthUsageData
+#org
+      - com.suypower.acrs.etl.process.org.domain.CsOrg
+      - com.suypower.acrs.etl.process.org.domain.DaOrgDayGatherData
+      - com.suypower.acrs.etl.process.org.domain.DaOrgDayUsageData
+      - com.suypower.acrs.etl.process.org.domain.DaOrgDayGatherDataBLine
+
+      - com.suypower.acrs.etl.process.org.domain.DaOrgMonthGatherData
+      - com.suypower.acrs.etl.process.org.domain.DaOrgMonthUsageData
+   drivers:
+#mp
+      - com.suypower.acrs.etl.process.mp.driver.DaMpDayGatherDataDriver
+      - com.suypower.acrs.etl.process.mp.driver.DaMpDayReadingsDriver
+      - com.suypower.acrs.etl.process.mp.driver.DaMpDayUsageDataDriver
+      - com.suypower.acrs.etl.process.mp.driver.DaMpDayGatherDataBLineDriver
+
+      - com.suypower.acrs.etl.process.mp.driver.DaMpMonthGatherDataDriver
+      - com.suypower.acrs.etl.process.mp.driver.DaMpMonthReadingsDriver
+      - com.suypower.acrs.etl.process.mp.driver.DaMpMonthUsageDataDriver
+#unit
+      - com.suypower.acrs.etl.process.unit.driver.DaUnitDayGatherDataDriver
+      - com.suypower.acrs.etl.process.unit.driver.DaUnitDayUsageDataDriver
+      - com.suypower.acrs.etl.process.unit.driver.DaUnitDayGatherDataBLineDriver
+
+      - com.suypower.acrs.etl.process.unit.driver.DaUnitMonthGatherDataDriver
+      - com.suypower.acrs.etl.process.unit.driver.DaUnitMonthUsageDataDriver
+#cons
+      - com.suypower.acrs.etl.process.cons.driver.DaConsDayGatherDataDriver
+      - com.suypower.acrs.etl.process.cons.driver.DaConsDayUsageDataDriver
+      - com.suypower.acrs.etl.process.cons.driver.DaConsDayGatherDataBLineDriver
+
+      - com.suypower.acrs.etl.process.cons.driver.DaConsMonthGatherDataDriver
+      - com.suypower.acrs.etl.process.cons.driver.DaConsMonthUsageDataDriver
+#org
+      - com.suypower.acrs.etl.process.org.driver.DaOrgDayGatherDataDriver
+      - com.suypower.acrs.etl.process.org.driver.DaOrgDayUsageDataDriver
+      - com.suypower.acrs.etl.process.org.driver.DaOrgDayGatherDataBLineDriver
+
+      - com.suypower.acrs.etl.process.org.driver.DaOrgMonthGatherDataDriver
+      - com.suypower.acrs.etl.process.org.driver.DaOrgMonthUsageDataDriver

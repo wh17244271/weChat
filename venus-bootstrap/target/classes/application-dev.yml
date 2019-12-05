@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    type:  com.alibaba.druid.pool.DruidDataSource
+    dialect: mysql
+    driverClassName: com.mysql.jdbc.Driver
+    #毛哥
+    #    url: jdbc:mysql://192.168.1.102:3306/sddsm?characterEncoding=utf8&allowMultiQueries=true&serverTimezone=GMT%2B8
+    #    username: root
+    #    password: 9210
+    #外网
+    #    url: jdbc:mysql://192.168.0.15:6240/venus?characterEncoding=utf8&allowMultiQueries=true&serverTimezone=GMT%2B8
+    #    username: root
+    #    password: suypower123!
+    #我的
+    url: jdbc:mysql://localhost:3306/venus_oa?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=GMT%2B8
+    username: userid
+    password: userid
+    #测试库
+#    url: jdbc:mysql://60.216.99.187:10202/venus?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=GMT%2B8&autoReconnect=true
+#    username: venus
+#    password: venus123!
+
+
+upload:
+  path: E:/A1_命运的烟尘/Desktop/
+
+
+
+

@@ -1,0 +1,785 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.suypower.venus.elec.common.dao.DaMpDataDao">
+    <!--DA_MP_GATHER_DATA 表基础字段 -->
+    <sql id="baseColumn">
+        gatherData.CONS_NO AS consNo,
+        gatherData.MP_ID AS mpId,
+        gatherData.IND_B_NO AS indBNo,
+        gatherData.DATA_DATE AS dataDate,
+        gatherData.MONTH AS month,
+        gatherData.LAST_TIME AS lastTime,
+        gatherData.LAST_VAL AS lastVal,
+        gatherData.MIN_TIME AS minTime,
+        gatherData.MIN_VAL AS minVal,
+        gatherData.MAX_TIME AS maxTime,
+        gatherData.MAX_VAL AS maxVal,
+        gatherData.AVG_VAL AS avgVal
+    </sql>
+    <sql id="powerBase">
+        powerData.IND_B_NO AS indBNo,
+        powerData.SP_Q AS tip,
+        powerData.P_Q AS peak,
+        powerData.M_Q AS flat,
+        powerData.V_Q AS valley,
+        powerData.TOTAL_Q AS total,
+        powerData.CONS_NO AS consNo,
+        powerData.MP_ID AS mpId
+    </sql>
+
+    <sql id="startFillDayLoadAll">
+        <if test="daMpQuery.fill != null and daMpQuery.fill != ''">
+            SELECT
+            sup.CONS_NO ,
+            sup.MP_ID ,
+            sup.MP_NAME ,
+            sup.MP_NO ,
+            sup.IND_B_NO ,
+            sup.DATE ,
+            sup.MONTH ,
+            sup.YEAR ,
+            dt.*
+            FROM
+            (
+            SELECT mp.CONS_NO,mp.MP_ID,mp.MP_NAME,mp.MP_NO,ind.IND_B_NO,`day`.DATE,`day`.MONTH,`day`.YEAR
+            from
+            (
+            SELECT MP_ID,CONS_NO,MP_NAME,MP_NO from DC_MP_INFO
+            <where>
+                <if test="daMpQuery.consNo != null and daMpQuery.consNo != ''">
+                    AND CONS_NO = #{consNo}
+                </if>
+                <if test="daMpQuery.mpIds != null and daMpQuery.mpIds != ''">
+                    AND MP_ID IN
+                    <foreach collection="daMpQuery.mpIds" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </where>
+            )mp,
+
+            (
+            SELECT IND_B_NO from dc_ind_mp_info
+            <where>
+                <if test="value != null and value.size>0 ">
+                    AND IND_B_NO IN
+                    <foreach collection="value" item="item" open="(" separator="," close=")">
+                        #{item.indBNo}
+                    </foreach>
+                </if>
+            </where>
+            ) ind,
+            (
+            SELECT DATE,month ,year from da_calendar_day
+            <where>
+                <if test="daMpQuery.dataDates != null and daMpQuery.dataDates != ''">
+                    AND DATE in
+                    <foreach collection="daMpQuery.dataDates" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="daMpQuery.dataMonths != null and daMpQuery.dataMonths != ''">
+                    AND MONTH in
+                    <foreach collection="daMpQuery.dataMonths" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </where>
+
+
+            )day
+            ORDER BY mp_id,date
+            )sup
+            LEFT JOIN (
+        </if>
+    </sql>
+
+    <!--  获取单个测点日数据-->
+    <!--    获取企业全部测点日数据-->
+    <!--    获取单元全部测点日数据-->
+    <select id="queryMpDayData" resultType="java.util.LinkedHashMap">
+
+        <foreach collection="tableIndxesMap" index="key" item="value" separator="union">
+            <include refid="startFillDayLoadAll"/>
+            SELECT gatherData.* from
+
+            (SELECT gatherData.* FROM ${key} gatherData
+            <where>
+                <if test="daMpQuery.consNo != null and daMpQuery.consNo != ''">
+                    AND gatherData.CONS_NO = #{daMpQuery.consNo}
+                </if>
+                <if test="daMpQuery.mpIds != null and daMpQuery.mpIds != ''">
+                    AND gatherData.MP_ID IN
+                    <foreach collection="daMpQuery.mpIds" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="value != null and value.size>0 ">
+                    AND gatherData.IND_B_NO IN
+                    <foreach collection="value" item="item" open="(" separator="," close=")">
+                        #{item.indBNo}
+                    </foreach>
+                </if>
+                <if test="daMpQuery.dataDates != null and daMpQuery.dataDates != ''">
+                    AND gatherData.DATA_DATE in
+                    <foreach collection="daMpQuery.dataDates" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="daMpQuery.dataMonths != null and daMpQuery.dataMonths != ''">
+                    AND gatherData.MONTH in
+                    <foreach collection="daMpQuery.dataMonths" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </where>
+            ) AS gatherData
+            <if test="daMpQuery.unitIds != null and daMpQuery.unitIds != ''">
+                JOIN CS_UNIT_MP_REL_INFO unit on unit.MP_ID = gatherData.MP_ID
+                <where>
+                    AND unit.UNIT_ID in
+                    <foreach collection="daMpQuery.unitIds" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </where>
+            </if>
+            <if test="daMpQuery.fill != null and daMpQuery.fill != ''">
+                )dt ON dt.mp_id = sup.mp_id and dt.IND_B_NO = sup.IND_B_NO and sup.DATE = dt.data_date
+            </if>
+        </foreach>
+        <if test="daMpQuery.fill == null or daMpQuery.fill == ''">
+            ORDER BY  data_date
+        </if>
+    </select>
+
+    <sql id="startFillDayLoad">
+        <if test="daMpQuery.fill != null and daMpQuery.fill != ''">
+            SELECT
+            sup.CONS_NO AS consNo,
+            sup.MP_ID AS mpId,
+            sup.MP_NAME AS mpName,
+            sup.MP_NO AS mpNo,
+            sup.IND_B_NO AS indBNo,
+            sup.DATE AS date,
+            sup.MONTH AS month,
+            sup.YEAR AS year,
+            dt.*
+            FROM
+            (
+            SELECT mp.CONS_NO,mp.MP_ID,mp.MP_NAME,mp.MP_NO,ind.IND_B_NO,`day`.DATE,`day`.MONTH,`day`.YEAR
+            from
+            (
+            SELECT MP_ID,CONS_NO,MP_NAME,MP_NO from DC_MP_INFO
+            <where>
+                <if test="daMpQuery.consNo != null and daMpQuery.consNo != ''">
+                    AND CONS_NO = #{consNo}
+                </if>
+                <if test="daMpQuery.mpIds != null and daMpQuery.mpIds != ''">
+                    AND MP_ID IN
+                    <foreach collection="daMpQuery.mpIds" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </where>
+            )mp,
+
+            (
+            SELECT IND_B_NO from dc_ind_mp_info
+            <where>
+                <if test="value != null and value.size>0 ">
+                    AND IND_B_NO IN
+                    <foreach collection="value" item="item" open="(" separator="," close=")">
+                        #{item.indBNo}
+                    </foreach>
+                </if>
+            </where>
+            ) ind,
+            (
+            SELECT DATE,month ,year from da_calendar_day
+            <where>
+                <if test="daMpQuery.dataDates != null and daMpQuery.dataDates != ''">
+                    AND DATE in
+                    <foreach collection="daMpQuery.dataDates" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="daMpQuery.dataMonths != null and daMpQuery.dataMonths != ''">
+                    AND MONTH in
+                    <foreach collection="daMpQuery.dataMonths" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </where>
+
+
+            )day
+                ORDER BY mp_id,date
+            )sup
+            LEFT JOIN (
+        </if>
+    </sql>
+    <sql id="endFillDayLoad">
+        <if test="daMpQuery.fill != null and daMpQuery.fill != ''">
+            )dt ON dt.mpId = sup.mp_id and dt.indBNo = sup.IND_B_NO and sup.DATE = dt.dataDate
+        </if>
+    </sql>
+    <!--  获取单个测点日最值数据-->
+    <!--    取企业全部测点日最值数据-->
+    <!--    获取单元全部测点日最值数据-->
+    <select id="queryMpDayMostData" resultType="com.suypower.venus.elec.common.entity.DaMpDayMostData">
+        <foreach collection="tableIndxesMap" index="key" item="value" separator="union">
+            <include refid="startFillDayLoad"/>
+            SELECT
+            gatherData.*
+            FROM
+            (select
+            <include refid="baseColumn"/>
+            from ${key} gatherData
+            <where>
+                <if test="daMpQuery.consNo != null and daMpQuery.consNo != ''">
+                    AND gatherData.CONS_NO = #{consNo}
+                </if>
+                <if test="daMpQuery.mpIds != null and daMpQuery.mpIds != ''">
+                    AND gatherData.MP_ID IN
+                    <foreach collection="daMpQuery.mpIds" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+
+                <if test="value != null and value.size>0 ">
+                    AND gatherData.IND_B_NO IN
+                    <foreach collection="value" item="item" open="(" separator="," close=")">
+                        #{item.indBNo}
+                    </foreach>
+                </if>
+                <if test="daMpQuery.dataDates != null and daMpQuery.dataDates != ''">
+                    AND gatherData.DATA_DATE in
+                    <foreach collection="daMpQuery.dataDates" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="daMpQuery.dataMonths != null and daMpQuery.dataMonths != ''">
+                    AND gatherData.MONTH in
+                    <foreach collection="daMpQuery.dataMonths" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </where>
+            )as gatherData
+            JOIN CS_UNIT_MP_REL_INFO unit on unit.MP_ID = gatherData.mpId
+            <where>
+                <if test="daMpQuery.unitIds != null and daMpQuery.unitIds != ''">
+                    AND unit.UNIT_ID in
+                    <foreach collection="daMpQuery.unitIds" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </where>
+
+            <include refid="endFillDayLoad"/>
+        </foreach>
+
+            <if test="daMpQuery.fill == null or daMpQuery.fill == ''">
+                ORDER BY  dataDate
+            </if>
+
+
+    </select>
+
+
+    <!--  获取单个测点日抄表示数数据 -->
+    <!--    获取企业全部测点日抄表示数数据-->
+    <!--    获取单元全部测点日抄表示数数据-->
+    <select id="queryMpDayReadingsData" resultType="com.suypower.venus.elec.common.entity.DaMpDayReadingsData">
+
+        <include refid="startFillDay"/>
+        select * from (
+        SELECT
+        gatherData.*
+        from
+        (select
+        gatherData.R_DATE as rDate,gatherData.L_DATA_TIME as lDataTime,
+        gatherData.L_NUM as lNum,gatherData.T_DATA_TIME as tDataTime,
+        gatherData.T_NUM as tNum,gatherData.MULT_PW as rate,
+        gatherData.IND_B_NO as indBNo,gatherData.CONS_NO AS consNo,
+        gatherData.MP_ID AS mpId
+        from DA_MP_DAY_READINGS gatherData
+        <where>
+            <if test="consNo != null and consNo != ''">
+                AND gatherData.CONS_NO = #{consNo}
+            </if>
+            <if test="mpIds != null and mpIds != ''">
+                AND gatherData.MP_ID IN
+                <foreach collection="mpIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="indexes != null and indexes != ''">
+                AND gatherData.IND_B_NO IN
+                <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                    #{item.indBNo}
+                </foreach>
+            </if>
+            <if test="dataDates != null and dataDates != ''">
+                AND gatherData.R_DATE in
+                <foreach collection="dataDates" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dataMonths != null and dataMonths != ''">
+              <!--  AND gatherData.R_DATE in
+                <foreach collection="dataMonths" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>-->
+
+                and
+                <foreach collection="dataMonths" item="item" open="(" separator="or" close=")">
+                    gatherData.R_DATE LIKE CONCAT(#{item},'%')
+                </foreach>
+            </if>
+        </where>
+        )as gatherData
+        JOIN CS_UNIT_MP_REL_INFO unit on unit.MP_ID = gatherData.mpId
+        <where>
+            <if test="unitIds != null and unitIds != ''">
+                AND unit.UNIT_ID in
+                <foreach collection="unitIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+
+        )as last
+        order by rDate
+        <if test="fill != null and fill != ''">
+            )dt ON dt.mpId = sup.mp_id and dt.indBNo = sup.IND_B_NO and sup.DATE = dt.rDate
+            ORDER BY sup.mp_id ,sup.date
+        </if>
+
+
+    </select>
+
+
+    <sql id="startFillDay">
+        <if test="fill != null and fill != ''">
+            SELECT
+            sup.CONS_NO AS consNo,
+            sup.MP_ID AS mpId,
+            sup.MP_NAME AS mpName,
+            sup.MP_NO AS mpNo,
+            sup.IND_B_NO AS indBNo,
+            sup.DATE AS date,
+            sup.MONTH AS month,
+            sup.YEAR AS year,
+            dt.*
+            FROM
+            (
+            SELECT mp.CONS_NO,mp.MP_ID,mp.MP_NAME,mp.MP_NO,ind.IND_B_NO,`day`.DATE,`day`.MONTH,`day`.YEAR
+            from
+            (
+            SELECT MP_ID,CONS_NO,MP_NAME,MP_NO from DC_MP_INFO
+            <where>
+                <if test="consNo != null and consNo != ''">
+                    AND CONS_NO = #{consNo}
+                </if>
+                <if test="mpIds != null and mpIds != ''">
+                    AND MP_ID IN
+                    <foreach collection="mpIds" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </where>
+            )mp,
+
+            (
+            SELECT IND_B_NO from dc_ind_mp_info
+            <where>
+                <if test="indexes != null and indexes != ''">
+                    AND IND_B_NO IN
+                    <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                        #{item.indBNo}
+                    </foreach>
+                </if>
+            </where>
+            ) ind,
+            (
+            SELECT DATE,month ,year from da_calendar_day
+            <where>
+                <if test="dataDates != null and dataDates != ''">
+                    AND DATE in
+                    <foreach collection="dataDates" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="dataMonths != null and dataMonths != ''">
+                    AND MONTH in
+                    <foreach collection="dataMonths" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </where>
+
+
+            )day
+            )sup
+            LEFT JOIN (
+        </if>
+    </sql>
+    <sql id="endFillDay">
+        <if test="fill != null and fill != ''">
+            )dt ON dt.mpId = sup.mp_id and dt.indBNo = sup.IND_B_NO and sup.DATE = dt.dataDate
+            ORDER BY sup.mp_id ,sup.date
+        </if>
+    </sql>
+
+    <!--    获取单个测点日用量数据-->
+    <!--    获取企业全部测点日用量数据-->
+    <!--    获取单元全部测点日用量数据-->
+    <select id="queryMpDayDosageData" resultType="com.suypower.venus.elec.common.entity.DaMpDayDosageData">
+
+        <include refid="startFillDay"/>
+
+        select * from (
+        SELECT
+        powerData.*
+        FROM
+        (SELECT
+        powerData.DATA_DATE AS dataDate,
+        powerData.MONTH as month,
+        <include refid="powerBase"/>
+        FROM DA_MP_DAY_POWER_DATA powerData
+        <where>
+            <if test="consNo != null and consNo != ''">
+                AND powerData.CONS_NO = #{consNo}
+            </if>
+            <if test="mpIds != null and mpIds != ''">
+                AND powerData.MP_ID IN
+                <foreach collection="mpIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="indexes != null and indexes != ''">
+                AND powerData.IND_B_NO IN
+                <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                    #{item.indBNo}
+                </foreach>
+            </if>
+            <if test="dataDates != null and dataDates != ''">
+                AND powerData.DATA_DATE in
+                <foreach collection="dataDates" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dataMonths != null and dataMonths != ''">
+                AND powerData.MONTH in
+                <foreach collection="dataMonths" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+        )AS powerData
+        JOIN CS_UNIT_MP_REL_INFO unit on unit.MP_ID = powerData.mpId
+        <where>
+            <if test="unitIds != null and unitIds != ''">
+                AND unit.UNIT_ID in
+                <foreach collection="unitIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+        )as last
+        order by dataDate
+
+        <include refid="endFillDay"/>
+
+
+    </select>
+
+    <!--    获取单个测点月数据-->
+    <!--    获取企业全部测点月数据-->
+    <!--    获取单元全部测点月数据-->
+    <select id="queryMpMonthData" resultType="com.suypower.venus.elec.common.entity.DaMpMonthData">
+        <include refid="startFillMonth"/>
+        select * from (
+        SELECT
+        powerData.*
+        FROM
+        (
+        select
+        powerData.DATA_MONTH as dataMonth,
+        powerData.IND_B_NO AS indBNo,
+        powerData.MIN_TIME AS minTime,
+        powerData.MIN_VAL AS minVal,
+        powerData.MAX_TIME AS maxTime,
+        powerData.MAX_VAL AS maxVal,
+        powerData.AVG_VAL AS avgVal,
+        powerData.CONS_NO AS consNo,
+        powerData.MP_ID AS mpId
+        from DA_MP_MONTH_LOAD_DATA powerData
+        <where>
+            <if test="mpIds != null and mpIds != ''">
+                AND powerData.MP_ID IN
+                <foreach collection="mpIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="consNo != null and consNo != ''">
+                AND powerData.CONS_NO = #{consNo}
+            </if>
+            <if test="indexes != null and indexes != ''">
+                AND powerData.IND_B_NO IN
+                <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                    #{item.indBNo}
+                </foreach>
+            </if>
+            <if test="dataMonths != null and dataMonths != ''">
+                AND powerData.DATA_MONTH in
+                <foreach collection="dataMonths" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dataYears != null and dataYears != ''">
+              <!--  AND powerData.DATA_MONTH, '%Y') IN
+                <foreach collection="dataYears" item="item" open="(" separator="," close=")">
+                    #{item}, '%Y')
+                </foreach>-->
+
+                and
+                <foreach collection="dataYears" item="item" open="(" separator="or" close=")">
+                    powerData.DATA_MONTH LIKE CONCAT(#{item},'%')
+                </foreach>
+            </if>
+        </where>
+
+        )AS powerData
+        JOIN CS_UNIT_MP_REL_INFO unit on unit.MP_ID = powerData.mpId
+        <where>
+            <if test="unitIds != null and unitIds != ''">
+                AND unit.UNIT_ID in
+                <foreach collection="unitIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+
+        )as last
+        order by dataMonth
+        <include refid="endFillMonth"/>
+    </select>
+
+
+    <!--  获取单个测点月抄表示数数据 -->
+    <!--    取企业全部测点月抄表示数数据-->
+    <!--    获取单元全部测点月抄表示数数据-->
+    <select id="queryMpMonthReadingsData" resultType="com.suypower.venus.elec.common.entity.DaMpMonthReadingsData">
+        <include refid="startFillMonth"/>
+
+        select * from (
+        SELECT
+        mpReadings.*
+        from (
+        select
+        mpReadings.R_YM as dataMonth,mpReadings.L_DATA_TIME as lDataTime,
+        mpReadings.L_NUM as lNum,mpReadings.T_DATA_TIME as tDataTime,
+        mpReadings.T_NUM as tNum,mpReadings.MULT_PW as rate,
+        mpReadings.IND_B_NO as indBNo,
+        mpReadings.CONS_NO AS consNo,
+        mpReadings.MP_ID AS mpId
+        from DA_MP_MONTH_READINGS mpReadings
+        <where>
+            <if test="mpIds != null and mpIds != ''">
+                AND mpReadings.MP_ID IN
+                <foreach collection="mpIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+
+            <if test="consNo != null and consNo != ''">
+                AND mpReadings.CONS_NO = #{consNo}
+            </if>
+            <if test="indexes != null and indexes != ''">
+                AND mpReadings.IND_B_NO IN
+                <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                    #{item.indBNo}
+                </foreach>
+            </if>
+            <if test="dataMonths != null and dataMonths != ''">
+                AND mpReadings.R_YM in
+                <foreach collection="dataMonths" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dataYears != null and dataYears != ''">
+               <!-- AND mpReadings.R_YM, '%Y') IN
+                <foreach collection="dataYears" item="item" open="(" separator="," close=")">
+                    #{item}, '%Y')
+                </foreach>-->
+                and
+                <foreach collection="dataYears" item="item" open="(" separator="or" close=")">
+                    mpReadings.R_YM LIKE CONCAT(#{item},'%')
+                </foreach>
+            </if>
+        </where>
+        )as mpReadings
+        JOIN CS_UNIT_MP_REL_INFO unit on unit.MP_ID = mpReadings.mpId
+        <where>
+            <if test="unitIds != null and unitIds != ''">
+                AND unit.UNIT_ID in
+                <foreach collection="unitIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+
+        )as last
+        order by dataMonth
+
+        <if test="fill != null and fill != ''">
+            )dt ON dt.mpId = sup.mp_id and dt.indBNo = sup.IND_B_NO and sup.MONTH = dt.dataMonth
+            ORDER BY sup.mp_id ,sup.month
+        </if>
+
+    </select>
+
+
+    <sql id="startFillMonth">
+        <if test="fill != null and fill != ''">
+            SELECT
+            sup.CONS_NO AS consNo,
+            sup.MP_ID AS mpId,
+            sup.MP_NAME AS mpName,
+            sup.MP_NO AS mpNo,
+            sup.IND_B_NO AS indBNo,
+            sup. MONTH AS MONTH,
+            sup. YEAR AS YEAR,
+            dt.*
+            FROM
+            (
+            SELECT mp.CONS_NO,mp.MP_ID,mp.MP_NAME,mp.MP_NO,ind.IND_B_NO,month.month,month.YEAR
+            from
+            (
+            SELECT MP_ID,CONS_NO,MP_NAME,MP_NO from DC_MP_INFO
+            <where>
+                <if test="consNo != null and consNo != ''">
+                    AND CONS_NO = #{consNo}
+                </if>
+                <if test="mpIds != null and mpIds != ''">
+                    AND MP_ID IN
+                    <foreach collection="mpIds" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+            </where>
+            )mp,
+
+            (
+            SELECT IND_B_NO from dc_ind_mp_info
+            <where>
+                <if test="indexes != null and indexes != ''">
+                    AND IND_B_NO IN
+                    <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                        #{item.indBNo}
+                    </foreach>
+                </if>
+            </where>
+            ) ind,
+            (
+            SELECT `MONTH`,`YEAR` from da_calendar_month
+            <where>
+                <if test="dataMonths != null and dataMonths != ''">
+                    AND MONTH in
+                    <foreach collection="dataMonths" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                <if test="dataYears != null and dataYears != ''">
+                   <!-- AND YEAR , '%Y') IN
+                    <foreach collection="dataYears" item="item" open="(" separator="," close=")">
+                        #{item}, '%Y')
+                    </foreach>-->
+
+                    and
+                    <foreach collection="dataYears" item="item" open="(" separator="or" close=")">
+                        YEAR LIKE CONCAT(#{item},'%')
+                    </foreach>
+                </if>
+            </where>
+
+            )month
+            )sup
+            LEFT JOIN (
+        </if>
+    </sql>
+    <sql id="endFillMonth">
+        <if test="fill != null and fill != ''">
+            )dt ON dt.mpId = sup.mp_id and dt.indBNo = sup.IND_B_NO and sup.month = dt.dataMonth
+            ORDER BY sup.mp_id ,sup.MONTH
+        </if>
+    </sql>
+    <!--    获取单个测点月用量数据-->
+    <!--    获取企业全部测点月用量数据-->
+    <!--    获取单元全部测点月用量数据-->
+    <select id="queryMpMonthDosageData" resultType="com.suypower.venus.elec.common.entity.DaMpMonthDosageData">
+
+        <include refid="startFillMonth"/>
+        select * from (
+        SELECT
+        powerData.*
+        FROM
+        (
+        select
+        powerData.DATA_DATE AS dataDate,
+        powerData.DATA_MONTH as dataMonth,
+        <include refid="powerBase"/>
+        from DA_MP_MONTH_POWER_DATA powerData
+        <where>
+            <if test="mpIds != null and mpIds != ''">
+                AND powerData.MP_ID IN
+                <foreach collection="mpIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="consNo != null and consNo != ''">
+                AND powerData.CONS_NO = #{consNo}
+            </if>
+            <if test="indexes != null and indexes != ''">
+                AND powerData.IND_B_NO IN
+                <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                    #{item.indBNo}
+                </foreach>
+            </if>
+            <if test="dataMonths != null and dataMonths != ''">
+                AND powerData.DATA_MONTH in
+                <foreach collection="dataMonths" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="dataYears != null and dataYears != ''">
+               <!-- AND powerData.DATA_MONTH, '%Y') IN
+                <foreach collection="dataYears" item="item" open="(" separator="," close=")">
+                    #{item}, '%Y')
+                </foreach>
+-->
+                and
+                <foreach collection="dataYears" item="item" open="(" separator="or" close=")">
+                    powerData.DATA_MONTH LIKE CONCAT(#{item},'%')
+                </foreach>
+            </if>
+        </where>
+        order by DATA_DATE
+        )as powerData
+        JOIN CS_UNIT_MP_REL_INFO unit on unit.MP_ID = powerData.mpId
+        <where>
+            <if test="unitIds != null and unitIds != ''">
+                AND unit.UNIT_ID in
+                <foreach collection="unitIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+
+        )as last
+        <include refid="endFillMonth"/>
+    </select>
+
+</mapper>

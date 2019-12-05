@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.suypower.venus</groupId>
+        <artifactId>venus</artifactId>
+        <version>1.0</version>
+        <relativePath>..</relativePath>
+    </parent>
+
+    <groupId>com.suypower.venus</groupId>
+    <artifactId>venus-bootstrap</artifactId>
+    <version>1.0</version>
+    <description>企业侧引导入口</description>
+    <packaging>jar</packaging>
+
+    <dependencies>
+
+
+
+        <dependency>
+            <groupId>com.suypower.venus</groupId>
+            <artifactId>venus-platform</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <!-- <dependency>
+             <groupId>com.suypower.venus</groupId>
+             <artifactId>venus-elec-common</artifactId>
+             <version>1.0</version>
+         </dependency>
+
+         <dependency>
+             <groupId>com.suypower.venus</groupId>
+             <artifactId>venus-elec-monitor</artifactId>
+             <version>1.0</version>
+         </dependency>-->
+    </dependencies>
+
+    <build>
+        <finalName>venus-bootstrap-oa</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!--fork :  如果没有该项配置，肯定devtools不会起作用，即应用不会restart -->
+                    <fork>true</fork>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>2.0.3.RELEASE</version>
+                <configuration>
+                    <mainClass>com.suypower.venus.bootstrap.EtlServerApplication</mainClass>
+                    <fork>true</fork>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.suypower.venus.elec.common.dao.DaOrgDataDao">
+    <!--DA_ORG_GATHER_DATA 表基础字段 -->
+    <sql id="baseColumn">
+        gatherData.ORG_NO AS orgNo,
+        gatherData.IND_B_NO AS indBNo,
+        gatherData.DATA_DATE AS dataDate,
+        gatherData.U_TYPE_NO AS unitId,
+        gatherData.MONTH AS month,
+        gatherData.LAST_TIME AS lastTime,
+        gatherData.LAST_VAL AS lastVal,
+        gatherData.MIN_TIME AS minTime,
+        gatherData.MIN_VAL AS minVal,
+        gatherData.MAX_TIME AS maxTime,
+        gatherData.MAX_VAL AS maxVal,
+        gatherData.AVG_VAL AS avgVal
+    </sql>
+
+    <!--  获取企业日类型数据  -->
+    <select id="queryConsDayData" resultType="java.util.LinkedHashMap">
+        SELECT
+        org.ORG_NAME,
+        gatherData.*
+        FROM
+        DA_ORG_GATHER_DATA gatherData
+        JOIN P_ORG org ON org.ORG_NO = gatherData.ORG_NO AND org.STATUS = '1'
+
+        <if test="orgNo != null and orgNo != ''">
+            AND gatherData.ORG_NO = #{orgNo}
+        </if>
+        <if test="unitTypes != null and unitTypes != ''">
+            AND gatherData.U_TYPE_NO IN
+            <foreach collection="unitTypes" item="item" open="(" separator="," close=")">
+                #{item.uintTypeNo}
+            </foreach>
+        </if>
+        <if test="indexes != null and indexes != ''">
+            AND gatherData.IND_B_NO IN
+            <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                #{item.indBNo}
+            </foreach>
+        </if>
+        <if test="dates != null and dates != ''">
+            AND gatherData.DATA_DATE in
+            <foreach collection="dates" item="dateses" open="(" separator="," close=")">
+                DATE_FORMAT(CONCAT(#{dateses.year},'-',#{dateses.month},'-',#{dateses.day}),'%Y-%m-%d')
+            </foreach>
+        </if>
+
+    </select>
+
+    <!--  获取企业日最值数据 -->
+    <select id="queryConsMostData" resultType="com.suypower.venus.elec.common.entity.DaConsDayMostData">
+        SELECT
+            org.ORG_NAME,
+            <include refid="baseColumn"/>
+        FROM DA_ORG_GATHER_DATA gatherData
+        JOIN P_ORG org ON org.ORG_NO = gatherData.ORG_NO AND org.STATUS = '1'
+        WHERE 1=1
+        <if test="orgNo != null and orgNo != ''">
+            AND gatherData.ORG_NO = #{orgNo}
+        </if>
+
+        <if test="indexes != null and indexes != ''">
+            AND gatherData.IND_B_NO IN
+            <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                #{item.indBNo}
+            </foreach>
+        </if>
+        <if test="dates != null and dates != ''">
+            AND gatherData.DATA_DATE in
+            <foreach collection="dates" item="dateses" open="(" separator="," close=")">
+                DATE_FORMAT(CONCAT(#{dateses.year},'-',#{dateses.month},'-',#{dateses.day}),'%Y-%m-%d')
+            </foreach>
+        </if>
+
+    </select>
+
+
+    <!--  获取企业月数据 -->
+    <select id="queryConsMonthData" resultType="com.suypower.venus.elec.common.entity.DaConsMonthData">
+        SELECT
+            org.ORG_NAME,
+            <include refid="baseColumn"/>
+        FROM DA_ORG_GATHER_DATA gatherData
+        JOIN P_ORG org ON org.ORG_NO = gatherData.ORG_NO AND org.STATUS = '1'
+        WHERE 1=1
+        <if test="orgNo != null and orgNo != ''">
+            AND gatherData.ORG_NO = #{orgNo}
+        </if>
+
+        <if test="indexes != null and indexes != ''">
+            AND gatherData.IND_B_NO IN
+            <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                #{item.indBNo}
+            </foreach>
+        </if>
+        <if test="dates != null and dates != ''">
+            AND gatherData.MONTH in
+            <foreach collection="dates" item="dateses" open="(" separator="," close=")">
+                DATE_FORMAT(CONCAT(#{dateses.year},'-',#{dateses.month},'-',#{dateses.day}),'%Y-%m')
+            </foreach>
+        </if>
+
+    </select>
+</mapper>

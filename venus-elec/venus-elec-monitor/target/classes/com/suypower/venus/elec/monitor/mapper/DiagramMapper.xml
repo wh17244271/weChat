@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.suypower.venus.elec.monitor.dao.DiagramDao">
+    <!--at_mod_mo_diagram 表基础字段 -->
+    <sql id="baseColumn">
+        diagram.gId,
+        diagram.consNo,
+        diagram.gName,
+        diagram.gDesc,
+        diagram.pGId
+    </sql>
+
+    <!--  查询企业接线图  -->
+    <select id="queryDiagramList" resultType="com.suypower.venus.elec.monitor.entity.Diagram">
+        SELECT
+        diagram.G_ID AS gId,
+        diagram.ORG_NO AS orgNo,
+        diagram.CONS_NO AS consNo,
+        (
+        SELECT
+        cons.CONS_NAME
+        FROM
+        CS_H_CONS_INFO cons
+        WHERE
+        cons.CONS_NO = diagram.CONS_NO
+        LIMIT 1
+        ) AS consName,
+        diagram.DISP_SN AS gSort,
+        diagram.MAP_NAME AS gName,
+        diagram.MAP_DESC AS gDesc,
+        diagram.P_G_ID AS pGId
+        FROM
+        at_mod_mo_diagram diagram
+        <where>
+            <if test="consNo != null and consNo != ''">
+                AND diagram.CONS_NO = #{consNo}
+            </if>
+            <if test="pGId != null and pGId != ''">
+                AND diagram.P_G_ID = #{pGId}
+            </if>
+        </where>
+
+
+    </select>
+
+    <!--    查询企业详细的接线图-->
+    <select id="getDiagramDetail" resultType="com.suypower.venus.elec.monitor.entity.DiagramDetail">
+        SELECT
+        diagram.G_ID AS gId,
+        diagram.ORG_NO AS orgNo,
+        diagram.CONS_NO AS consNo,
+        diagram.SVG AS gData,
+        (
+        SELECT
+        cons.CONS_NAME
+        FROM
+        CS_H_CONS_INFO cons
+        WHERE
+        cons.CONS_NO = diagram.CONS_NO
+        LIMIT 1
+        ) AS consName,
+        diagram.DISP_SN AS gSort,
+        diagram.MAP_NAME AS gName,
+        diagram.MAP_DESC AS gDesc,
+        diagram.P_G_ID AS pGId
+        FROM
+        at_mod_mo_diagram diagram
+        <where>
+            <if test="gId != null and gId != ''">
+                AND diagram.G_ID = #{gId}
+            </if>
+        </where>
+        LIMIT 1
+    </select>
+
+
+</mapper>

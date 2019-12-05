@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.suypower.venus.sys.dao.UserDao">
+
+    <sql id="userClo">
+        user_id AS userId,
+        user_name AS userName,
+        user_password AS userPassword,
+        user_nickame AS userNickname,
+         user_phone AS userPhone,
+          user_email AS userEmail,
+        user_status AS userStatus,
+        login_error_count AS loginErrorCount,
+        login_error_time AS loginErrorTime,
+        user_avatar AS  userAvatar
+    </sql>
+
+    <!--    通过多个条件查找用户信息-->
+    <select id="findUserList" resultType="com.suypower.venus.sys.entity.User">
+        SELECT
+        <include refid="userClo"/>
+        FROM
+        p_user usr
+        <where>
+            and user_status = '1'
+            <if test="userName != null and userName != ''">
+                AND user_name LIKE CONCAT('%',#{userName},'%')
+            </if>
+            <if test="userId != null and userId != ''">
+                AND user_id = #{userId}
+            </if>
+
+
+        </where>
+    </select>
+
+    <!-- 通过用户名查找用户-->
+    <select id="findByUserName" resultType="com.suypower.venus.sys.entity.User">
+        SELECT
+        <include refid="userClo"/>
+        FROM
+        p_user usr
+        <where>
+            AND user_name = #{userName}
+
+        </where>
+        LIMIT 1
+    </select>
+    <!--更新用户信息通过用户id-->
+    <update id="updateUserInfoByUserId">
+        update p_user
+        <set>
+            <if test="userNickname != null and userNickname != ''">
+                user_nickame = #{userNickname},
+            </if>
+            <if test="userEmail != null and userEmail != ''">
+                user_email = #{userEmail},
+            </if>
+        </set>
+        <where>
+            user_id = #{userId}
+        </where>
+    </update>
+    <!--    新增用户-->
+    <insert id="addUser">
+        insert into p_user
+        (
+            user_name,
+            user_password,
+            user_nickame,
+             user_email,
+             user_phone,
+                create_time,
+                user_status
+        )values
+        (
+            #{userName},
+             #{userPassword},
+              #{userNickname},
+               #{userEmail},
+                #{userPhone},
+               now(),
+               '1'
+        )
+    </insert>
+    <!--    通过用户id更改用户状态-->
+    <update id="updateUserStatusByUserids">
+        update p_user
+        <set>
+            user_status = #{userStatus}
+        </set>
+        <where>
+            user_id IN
+            <foreach collection="userIds" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </where>
+    </update>
+
+    <!--    通过用户名更新用户状态-->
+    <update id="updateUserStatus">
+        update p_user set
+          user_status = #{status},
+          login_error_count = #{errorCount},
+          login_error_time = #{errorTime}
+        where user_name = #{username}
+    </update>
+
+
+</mapper>

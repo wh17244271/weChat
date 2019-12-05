@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.suypower.venus.app.cs.dao.CsObjectStrucureDao">
+
+    <resultMap id="BaseTreeResultMap" type="com.suypower.venus.app.cs.entity.CsObjectInfoStructure">
+
+
+        <collection column="{consNo=consNo,stClsNo=stClsNo,stClsId=stClsId,arcId=arcId}" property="children"
+                    ofType="com.suypower.venus.app.cs.entity.CsObjectInfoStructure"
+                    select="getNextNodeTree"/>
+    </resultMap>
+
+    <resultMap id="NextTreeResultMap" type="com.suypower.venus.app.cs.entity.CsObjectInfoStructure">
+
+
+        <collection column="{consNo=consNo,stClsNo=stClsNo,stClsId=stClsId,arcId=arcId}" property="children"
+                    ofType="com.suypower.venus.app.cs.entity.CsObjectInfoStructure"
+                    select="getNextNodeTree"/>
+    </resultMap>
+
+    <sql id="infoColumn">
+        info.arc_id AS nodeId,
+        info.arc_alias_name AS title,
+        info.arc_table AS arcTable,
+        info.arc_name AS arcName,
+        info.arc_alias_name AS arcAliasName,
+        info.arc_no AS arcNo,
+        info.arc_weight AS arcWeight,
+        info.arc_status AS arcStatus,
+        info.cls_id AS clsId,
+        info.arc_desc AS arcDesc,
+        info.arc_num_relation AS arcNumRelation,
+        info.arc_show AS arcShow,
+        info.arc_data AS arcData,
+        info.arc_tags AS arcTags,
+        info.arc_date AS arcDate,
+        info.arc_place AS arcPlace,
+        info.arc_remark AS arcRemark
+    </sql>
+
+    <sql id="structureColumn">
+        structure.arcId,
+        structure.stId,
+        structure.stClsId,
+        structure.stClsNo,
+        structure.consNo,
+        structure.arcPid,
+        structure.arcPids,
+        structure.stWeight
+    </sql>
+
+    <!--    查询档案结构-->
+    <select id="queryForList" resultMap="BaseTreeResultMap">
+        SELECT
+        'true' AS expand,
+        'false' AS disabled,
+        'false' AS disableCheckbox,
+        'false' AS selected,
+        'false' AS checked,
+        (SELECT relation.relation_type from cs_object_relation relation WHERE relation.relation_status='1' AND
+        relation.arc_id = info.arc_id LIMIT 1 )AS
+        relationType,
+        (SELECT relation.relation_id from cs_object_relation relation WHERE relation.relation_status='1' AND
+        relation.arc_id = info.arc_id LIMIT 1 )AS
+        relationId,
+        <include refid="infoColumn"/>,
+        <include refid="structureColumn"/>
+        FROM
+        cs_object_info info
+        JOIN (
+        SELECT
+        str.st_id AS stId,
+        str.st_cls_id AS stClsId,
+        scl.st_cls_no AS stClsNo,
+        str.cons_no AS consNo,
+        str.arc_id AS arcId,
+        str.st_pid AS arcPid,
+        str.st_pids AS arcPids,
+        str.st_weight AS stWeight
+        FROM
+        cs_object_structure str
+        JOIN cs_object_structure_classify scl ON str.st_cls_id = scl.st_cls_id
+        AND scl.st_cls_status = '1'
+        <if test="consNo != null and consNo != ''">
+            AND str.cons_no = #{consNo}
+        </if>
+
+        <if test="stClsNo != null and stClsNo != ''">
+            AND scl.st_cls_no = #{stClsNo}
+        </if>
+        <if test="stClsId != null and stClsId != ''">
+            AND scl.st_cls_id = #{stClsId}
+        </if>
+        <if test="arcPid != null and arcPid != ''">
+            AND arc_id = #{arcPid}
+        </if>
+        <if test="arcPid == null or arcPid == ''">
+            AND st_pid = '-1'
+        </if>
+
+
+        ) structure ON info.arc_id = structure.arcId
+        AND info.arc_status = '1';
+
+
+    </select>
+
+    <!--    通过st_pid 查询档案结构-->
+    <select id="getNextNodeTree" resultMap="NextTreeResultMap">
+        SELECT
+        'true' AS expand,
+        'false' AS disableCheckbox,
+        'false' AS selected,
+        'false' AS checked,
+        (SELECT relation.relation_type from cs_object_relation relation WHERE relation.relation_status='1' AND
+        relation.arc_id = info.arc_id LIMIT 1 )AS relationType,
+        (SELECT relation.relation_id from cs_object_relation relation WHERE relation.relation_status='1' AND
+        relation.arc_id = info.arc_id LIMIT 1 )AS relationId,
+        <include refid="infoColumn"/>,
+        <include refid="structureColumn"/>
+        FROM
+        cs_object_info info
+        JOIN (
+        SELECT
+        str.st_id AS stId,
+        str.st_cls_id AS stClsId,
+        scl.st_cls_no AS stClsNo,
+        str.cons_no AS consNo,
+        str.arc_id AS arcId,
+        str.st_pid AS arcPid,
+        str.st_pids AS arcPids,
+        str.st_weight AS stWeight
+        FROM
+        cs_object_structure str
+        JOIN cs_object_structure_classify scl ON str.st_cls_id = scl.st_cls_id
+        AND scl.st_cls_status = '1'
+        AND str.cons_no = #{consNo}
+        AND scl.st_cls_no = #{stClsNo}
+        AND scl.st_cls_id = #{stClsId}
+        AND st_pid = #{arcId}
+        ) structure ON info.arc_id = structure.arcId
+        AND info.arc_status = '1';
+
+
+    </select>
+
+    <!--    通过arcId查询关联关系-->
+    <select id="getRelationIdByArcId" resultType="com.suypower.venus.app.cs.entity.CsObjectRelation">
+
+        SELECT
+        arc_id AS arcId,
+        relation_type AS relationType,
+        relation_id AS relationId,
+        relation_status AS relationStatus
+        FROM
+        cs_object_relation
+        WHERE
+        relation_status = '1'
+        <if test="ids != null and ids != ''">
+            AND arc_id IN
+            <foreach collection="ids" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+
+
+    </select>
+
+
+</mapper>
+

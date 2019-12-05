@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.suypower.venus.app.kbs.dao.KbsArticleDao">
+
+    <resultMap id="CategoryMap" type="com.suypower.venus.app.kbs.entity.KbsArticleCategory">
+
+        <collection property="children" ofType="com.suypower.venus.app.kbs.entity.KbsArticleCategory"
+                    select="queryKbsArticleCategory" column="{categoryId=categoryId}"/>
+
+        <collection property="kbsArticles" ofType="com.suypower.venus.app.kbs.entity.KbsArticle"
+                    select="queryKbsArticle" column="{categoryId=categoryId}"/>
+
+    </resultMap>
+
+    <select id="queryKbsArticleCategory" resultMap="CategoryMap">
+
+                   SELECT
+        category_id AS categoryId,
+        category_pid AS categoryPid,
+        category_title AS categoryTitle,
+        category_name AS categoryName,
+        category_status AS categoryStatus,
+        category_top AS categoryTop,
+        category_recommend AS categoryRecommend,
+        category_weight AS categoryWeight
+    FROM
+        kbs_article_category
+    <where>
+        category_status = '1'
+        AND category_pid = #{categoryId}
+    </where>
+    ORDER BY
+        category_weight DESC
+    </select>
+
+    <select id="queryKbsArticle" resultType="com.suypower.venus.app.kbs.entity.KbsArticle">
+            SELECT
+        article_id AS articleId,
+        category_id AS categoryId,
+        article_title AS articleTitle,
+        article_content AS articleContent,
+        article_source AS articleSource,
+        article_author AS articleAuthor,
+        article_publish_time AS articlePublishTime,
+        article_status AS articleStatus,
+        article_top AS articleTop,
+        article_recommend AS articleRecommend,
+        article_weight AS articleWeight,
+        article_keywords AS articleKeywords,
+        article_style AS articleStyle,
+        article_crawl_source AS articleCrawlSource,
+        article_cawl_time AS articleCrawlTime
+    FROM
+        kbs_article
+        <where>
+            category_id = #{categoryId}
+            AND article_status = '1'
+        </where>
+        order by article_weight desc
+        limit 1
+    </select>
+    <!--<select id="queryKbsArticleCategoryChildren">
+
+        SELECT
+        category_id AS categoryId,
+        category_pid AS categoryPid,
+        category_title AS categoryTitle,
+        category_name AS categoryName,
+        category_status AS categoryStatus,
+        category_top AS categoryTop,
+        category_recommend AS categoryRecommend,
+        category_weight AS categoryWeight
+        FROM
+        kbs_article_category
+        <where>
+            category_status = '1'
+            AND category_pid  =#{categoryId}
+        </where>
+        ORDER BY
+        category_weight DESC
+    </select>-->
+
+</mapper>

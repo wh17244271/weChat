@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.suypower.venus.sys.dao.MenuListDao">
+
+    <resultMap id="menuMap" type="com.suypower.venus.sys.entity.Menu">
+
+        <collection column="{menuId=menuId}" property="children"
+                    ofType="com.suypower.venus.sys.entity.Menu"
+                    select="findMenuChildren"/>
+
+    </resultMap>
+
+    <resultMap id="childrenMap" type="com.suypower.venus.sys.entity.Menu">
+        <collection column="{menuId=menuId}" property="children"
+                    ofType="com.suypower.venus.sys.entity.Menu"
+                    select="findMenuChildren"/>
+    </resultMap>
+
+    <!-- 查找菜单-->
+    <select id="findMenuList" resultMap="menuMap">
+
+        SELECT
+            MENU_ID AS menuId,
+            `NAME` AS NAME,
+            PATH AS path,
+            ICON AS icon,
+            TITLE AS title,
+            HIDEINBREAD AS hideInBread,
+            HIDEINMENU AS hideInMenu,
+            NOTCACHE AS notCache,
+            ACCESS AS access,
+            BEFORECLOSENAME AS beforeCloseName,
+            COMPONENT AS component,
+            P_MENU_ID AS pMenuId
+        FROM
+            p_menu_wh
+            WHERE P_MENU_ID = '-1'
+            and status = 1
+            ORDER BY WEIGHT
+    </select>
+    <select id="findMenuChildren" resultMap="childrenMap">
+        SELECT
+            MENU_ID AS menuId,
+            `NAME` AS NAME,
+            PATH AS path,
+            ICON AS icon,
+            TITLE AS title,
+            HIDEINBREAD AS hideInBread,
+            HIDEINMENU AS hideInMenu,
+            NOTCACHE AS notCache,
+            ACCESS AS access,
+            BEFORECLOSENAME AS beforeCloseName,
+            COMPONENT AS component,
+            P_MENU_ID AS pMenuId
+        FROM
+            p_menu_wh
+            WHERE P_MENU_ID = #{menuId}
+            and status = 1
+            ORDER BY WEIGHT
+    </select>
+
+
+</mapper>

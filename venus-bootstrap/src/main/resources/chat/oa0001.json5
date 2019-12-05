@@ -1,0 +1,257 @@
+{
+  "err": 0,
+  "data": {
+    "list_id": "a9d5701b885506caed5d6cb101fa26a5",
+    "type": 0,
+    "show_name": "cs123456",
+    "list": [
+      {
+        "type": 0,
+        "msg": {
+          "id": "5da83e9e2da56b07d8002659",
+          "type": 0,
+          "time": 1571307166,
+          "user_info": {
+            "uid": 7,
+            "name": "",
+            "face": "user\/7\/50.jpg"
+          },
+          "content": {
+            "text": "我通过了你的朋友验证请求,现在我们可以开始聊天了"
+          }
+        }
+      },
+      {
+        "type": 0,
+        "msg": {
+          "id": "5da83ea62da56b07c4002664",
+          "type": 0,
+          "time": 1571307174,
+          "user_info": {
+            "uid": 268,
+            "name": "",
+            "face": "default_man\/50.jpg"
+          },
+          "content": {
+            "text": "1"
+          }
+        }
+      },
+      {
+        "type": 0,
+        "msg": {
+          "id": "5da83eb52da56b07c4002665",
+          "type": 0,
+          "time": 1571307189,
+          "user_info": {
+            "uid": 7,
+            "name": "",
+            "face": "user\/7\/50.jpg"
+          },
+          "content": {
+            "text": "12323132"
+          }
+        }
+      },
+      {
+        "type": 0,
+        "msg": {
+          "id": "5da83ec92da56b07c4002666",
+          "type": 0,
+          "time": 1571307209,
+          "user_info": {
+            "uid": 268,
+            "name": "",
+            "face": "default_man\/50.jpg"
+          },
+          "content": {
+            "text": "12312321"
+          }
+        }
+      },
+      {
+        "type": 0,
+        "msg": {
+          "id": "5da83ecd2da56b07c4002667",
+          "type": 0,
+          "time": 1571307213,
+          "user_info": {
+            "uid": 7,
+            "name": "",
+            "face": "user\/7\/50.jpg"
+          },
+          "content": {
+            "text": "12312313"
+          }
+        }
+      },
+      {
+        "type": 0,
+        "msg": {
+          "id": "5da83ed62da56b07c4002668",
+          "type": 0,
+          "time": 1571307222,
+          "user_info": {
+            "uid": 268,
+            "name": "",
+            "face": "default_man\/50.jpg"
+          },
+          "content": {
+            "text": "312312321"
+          }
+        }
+      },
+      {
+        "type": 0,
+        "msg": {
+          "id": "5da83eda2da56b07c4002669",
+          "type": 0,
+          "time": 1571307226,
+          "user_info": {
+            "uid": 7,
+            "name": "",
+            "face": "user\/7\/50.jpg"
+          },
+          "content": {
+            "text": "31231233"
+          }
+        }
+      },
+      {
+        "type": 0,
+        "msg": {
+          "id": "5da83f082da56b07d800265a",
+          "type": 0,
+          "time": 1571307272,
+          "user_info": {
+            "uid": 268,
+            "name": "",
+            "face": "default_man\/50.jpg"
+          },
+          "content": {
+            "text": "123123123"
+          }
+        }
+      },
+      {
+        "type": 0,
+        "msg": {
+          "id": "5da83f0e2da56b07d800265b",
+          "type": 0,
+          "time": 1571307278,
+          "user_info": {
+            "uid": 7,
+            "name": "",
+            "face": "user\/7\/50.jpg"
+          },
+          "content": {
+            "text": "312312312"
+          }
+        }
+      },
+      {
+        "type": 0,
+        "msg": {
+          "id": "5da83f2a2da56b07d800265c",
+          "type": 0,
+          "time": 1571307306,
+          "user_info": {
+            "uid": 7,
+            "name": "",
+            "face": "user\/7\/50.jpg"
+          },
+          "content": {
+            "text": "12312312321"
+          }
+        }
+      },
+      {
+        "type": 0,
+        "msg": {
+          "id": "5da83f342da56b07d800265d",
+          "type": 0,
+          "time": 1571307316,
+          "user_info": {
+            "uid": 268,
+            "name": "",
+            "face": "default_man\/50.jpg"
+          },
+          "content": {
+            "text": "123123213"
+          }
+        }
+      },
+      {
+        "type": 0,
+        "msg": {
+          "id": "5da841282da56b07d800265e",
+          "type": 2,
+          "time": 1571307816,
+          "user_info": {
+            "uid": 268,
+            "name": "",
+            "face": "default_man\/50.jpg"
+          },
+          "content": {
+            "url": "20191017\/1306a4f6c84b4683689012bd3c26180b.jpg",
+            "w": 240,
+            "h": 300
+          }
+        }
+      },
+      {
+        "type": 0,
+        "msg": {
+          "id": "5da841322da56b07d800265f",
+          "type": 2,
+          "time": 1571307826,
+          "user_info": {
+            "uid": 268,
+            "name": "",
+            "face": "default_man\/50.jpg"
+          },
+          "content": {
+            "url": "20191017\/805eb192d6970f6369f1ab7f4875b779.jpg",
+            "w": 240,
+            "h": 300
+          }
+        }
+      },
+      {
+        "type": 0,
+        "msg": {
+          "id": "5da86fc22da56b07d8002660",
+          "type": 0,
+          "time": 1571319746,
+          "user_info": {
+            "uid": 7,
+            "name": "",
+            "face": "user\/7\/50.jpg"
+          },
+          "content": {
+            "text": "1556165"
+          }
+        }
+      },
+      {
+        "type": 0,
+        "msg": {
+          "id": "5da86fc62da56b07c400266a",
+          "type": 0,
+          "time": 1571319750,
+          "user_info": {
+            "uid": 7,
+            "name": "",
+            "face": "user\/7\/50.jpg"
+          },
+          "content": {
+            "text": "[墨镜]"
+          }
+        }
+      }
+    ],
+    "is_msg": 0,
+    "is_action": 1,
+    "obj_id": 268
+  }
+}

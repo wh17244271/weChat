@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.suypower.venus.sys.dao.SystemDao">
+
+    <sql id="sysClo">
+        sys_id AS sysId,
+        sys_no AS sysNo,
+        sys_name AS sysName,
+        sys_url AS sysUrl,
+         sys_desc AS sysDesc,
+          sys_remark AS sysRemark,
+        sys_status AS sysStatus
+    </sql>
+
+    <!--    查找系统列表-->
+    <select id="findSysList" resultType="com.suypower.venus.sys.entity.System">
+        SELECT
+        <include refid="sysClo"/>
+        FROM
+        p_system sys
+        <where>
+            sys.sys_status = '1'
+        </where>
+    </select>
+
+
+</mapper>

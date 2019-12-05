@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.suypower.venus</groupId>
+        <artifactId>venus-platform-desktop</artifactId>
+        <version>1.0</version>
+        <relativePath>../../venus-platform/venus-platform-desktop</relativePath>
+    </parent>
+
+    <groupId>com.suypower.venus</groupId>
+    <artifactId>venus-bootstrap-enterprise</artifactId>
+    <version>1.0</version>
+    <description>企业侧引导入口</description>
+    <packaging>jar</packaging>
+
+    <modules>
+        <module>../../venus-platform/venus-platform-desktop</module>
+        <module>../../venus-elec/venus-elec-common</module>
+        <module>../../venus-elec/venus-elec-monitor</module>
+    </modules>
+    <dependencies>
+        <dependency>
+            <groupId>com.suypower.venus</groupId>
+            <artifactId>venus-elec-monitor</artifactId>
+            <version>1.0</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>acrs-etl-server--test</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>2.0.3.RELEASE</version>
+                <configuration>
+                    <mainClass>com.suypower.acrs.etl.server.EtlServerApplication</mainClass>
+                    <fork>true</fork>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

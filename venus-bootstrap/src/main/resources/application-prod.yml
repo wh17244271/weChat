@@ -1,0 +1,12 @@
+spring:
+       datasource:
+              type:  com.alibaba.druid.pool.DruidDataSource
+              dialect: mysql
+              driverClassName: com.mysql.jdbc.Driver
+              url: jdbc:mysql://10.3.0.17:6240/venus?characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+              username: venus
+              password: venus123!
+
+
+upload:
+  path: E:\A1_命运的烟尘\Desktop\fileupload

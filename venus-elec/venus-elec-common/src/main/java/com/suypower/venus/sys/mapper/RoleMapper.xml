@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.suypower.venus.sys.dao.RoleDao">
+
+    <sql id="roleClo">
+        role_id AS roleId,
+        sys_id AS sysId,
+        role_no AS roleNo,
+        role_name AS roleName,
+         role_leavl AS roleLeavl,
+          role_desc AS roleDesc,
+        role_remark AS roleRemark,
+        role_status AS roleStatus
+    </sql>
+
+    <!--    查找系统平台下的所有角色-->
+    <select id="findRoleList" resultType="com.suypower.venus.sys.entity.Role">
+        SELECT
+        <include refid="roleClo"/>
+        FROM
+        p_role role
+        <where>
+            role.sys_id = #{sysId}
+        </where>
+    </select>
+
+
+</mapper>

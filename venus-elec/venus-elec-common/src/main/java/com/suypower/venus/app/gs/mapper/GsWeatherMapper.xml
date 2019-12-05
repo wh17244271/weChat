@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.suypower.venus.app.gs.dao.GsWeatherDao">
+
+    <resultMap id="dayMap" type="com.suypower.venus.app.gs.entity.GsWeatherDay">
+
+
+        <collection column="{wtDate=wtDate,cityId=cityId,orgNo=orgNo}" property="hours"
+                    ofType="com.suypower.venus.app.gs.entity.GsWeatherHour"
+                    select="queryHourByDay"/>
+    </resultMap>
+
+    <!--    <resultMap id="hourMap" type="com.suypower.venus.app.gs.entity.GsWeatherHour">-->
+
+
+    <!--    </resultMap>-->
+
+    <sql id="queryDay">
+         org_no AS orgNo,
+            city_id AS cityId,
+            city_name AS cityName,
+            city_name_pinyin AS cityNamePinyin,
+            wt_date AS wtDate,
+            wt_week AS wtWeek,
+            wt_weather AS wtWeather,
+            wt_weather_pinyin AS wtWeatherPinyin,
+            wt_air AS wtAir,
+            wt_air_level AS wtAirLevel,
+            wt_air_tips AS wtAirTips,
+            wt_humidity AS wtHumidity,
+            wt_alram_type AS wtAlarmType,
+            wt_alram_level AS wtAlarmLevel,
+            wt_alarm_content AS wtAlarmContent,
+            wt_tem1 AS wtTem1,
+            wt_tem2 AS wtTem2,
+            wt_tem AS wtTem,
+            wt_v_tem AS wtVTem,
+            wt_v_tem1 AS wtVTem1,
+            wt_v_tem2 AS wtVTem2,
+            wt_win AS wtWin,
+            wt_win_speed AS wtWinSpeed,
+            wt_win_v_speed AS wtWinVSpeed,
+            wt_update_time AS wtUpdateTime
+    </sql>
+    <select id="queryOne" resultMap="dayMap">
+        SELECT
+        <include refid="queryDay"/>
+        FROM
+        gs_weather_day
+        <where>
+            wt_date = STR_TO_DATE(CONCAT(#{wtDate.year},'-',#{wtDate.month},'-',#{wtDate.day}),'%Y-%m-%d')
+            <if test="cityId != null and cityId != ''">
+                and city_id = #{cityId}
+            </if>
+            <if test="orgNo != null and orgNo != ''">
+                and org_no = #{orgNo}
+            </if>
+
+        </where>
+        order by wt_date
+    </select>
+
+    <select id="queryList" resultMap="dayMap">
+        SELECT
+        <include refid="queryDay"/>
+        FROM
+        gs_weather_day
+        <where>
+            <if test="startWtDate != null ">
+                and
+                wt_date >=
+                STR_TO_DATE(CONCAT(#{startWtDate.year},'-',#{startWtDate.month},'-',#{startWtDate.day}),'%Y-%m-%d')
+            </if>
+
+            <if test="endWtDate != null ">
+                and
+                wt_date  <![CDATA[<= ]]>
+                STR_TO_DATE(CONCAT(#{endWtDate.year},'-',#{endWtDate.month},'-',#{endWtDate.day}),'%Y-%m-%d')
+
+            </if>
+
+
+            <if test="cityId != null and cityId != ''">
+                and city_id = #{cityId}
+            </if>
+            <if test="orgNo != null and orgNo != ''">
+                and org_no = #{orgNo}
+            </if>
+
+        </where>
+        order by wt_date
+
+    </select>
+
+    <select id="queryHourByDay" resultType="com.suypower.venus.app.gs.entity.GsWeatherHour">
+        SELECT
+        org_no AS orgNo,
+        city_id AS cityId,
+        city_name AS cityName,
+        city_name_pinyin AS cityNamePinyin,
+        wh_date AS whDate,
+        wh_hour AS whHour,
+        wh_week AS whWeek,
+        wh_weather AS whWeather,
+        wh_weather_pingyin AS whWeatherPinyin,
+        wh_tem AS whTem,
+        wh_v_tem AS whVTem,
+        wh_win AS whWin,
+        wh_win_speed AS whWinSpeed,
+        wh_win_v_speed AS whWinVSpeed,
+        wh_update_time AS wtUpdateTime
+        FROM
+        gs_weather_hour
+        <where>
+            wh_date = STR_TO_DATE(#{wtDate},'%Y-%m-%d')
+            <if test="cityId != null and cityId != ''">
+                and city_id = #{cityId}
+            </if>
+
+        </where>
+        order by wh_hour
+    </select>
+
+
+    <!--    判断该城市这天是否存在-->
+    <select id="existDay" resultType="Integer">
+        SELECT count(city_id)as num from gs_weather_day
+
+        <where>
+            <if test="cityId != null and cityId != ''">
+                and city_id = #{cityId}
+            </if>
+            <if test="wtDate != null ">
+                and
+                wt_date =
+                STR_TO_DATE(CONCAT(#{wtDate.year},'-',#{wtDate.month},'-',#{wtDate.day}),'%Y-%m-%d')
+            </if>
+        </where>
+
+    </select>
+
+    <!--    判断该城市这天这个时间点是否存在-->
+    <select id="existDayTime" resultType="Integer">
+
+        SELECT
+        count(wh_hour)as num
+        FROM
+        gs_weather_hour
+        <where>
+            <if test="cityId != null and cityId != ''">
+                and city_id = #{cityId}
+            </if>
+            <if test="whDate != null ">
+                and
+                wh_date =
+                STR_TO_DATE(CONCAT(#{whDate.year},'-',#{whDate.month},'-',#{whDate.day}),'%Y-%m-%d')
+            </if>
+            <if test="whHour != null and whHour != ''">
+                and wh_hour = #{whHour}
+            </if>
+        </where>
+    </select>
+
+    <!--    更新气象数据(天)-->
+    <update id="updateWeatherDay" parameterType="com.suypower.venus.app.gs.entity.GsWeatherDay">
+        UPDATE gs_weather_day
+        <set>
+            org_no = '0000',
+            city_id = #{cityId},
+            city_name = #{cityName},
+            city_name_pinyin = #{cityNamePinyin},
+            wt_date = #{wtDate},
+            wt_week = #{wtWeek},
+            wt_weather = #{wtWeather},
+            wt_weather_pinyin = #{wtWeatherPinyin},
+            wt_air = #{wtAir},
+            wt_air_level = #{wtAirLevel},
+            wt_air_tips = #{wtAirTips},
+            wt_humidity = #{wtHumidity},
+            wt_alram_type = #{wtAlarmType},
+            wt_alram_level = #{wtAlarmLevel},
+            wt_alarm_content = #{wtAlarmContent},
+            wt_tem1 = #{wtTem1},
+            wt_tem2 = #{wtTem2},
+            wt_tem = #{wtTem},
+            wt_v_tem1 = #{wtVTem1},
+            wt_v_tem2 = #{wtVTem2},
+            wt_v_tem = #{wtVTem},
+            wt_win = #{wtWin},
+            wt_win_speed = #{wtWinSpeed},
+            wt_win_v_speed = #{wtWinVSpeed},
+            wt_win_index = NULL,
+            wt_update_time = now()
+        </set>
+        <where>
+            city_id = #{cityId} and wt_date =#{wtDate}
+        </where>
+
+
+    </update>
+
+    <!--    新增象数据(天)-->
+    <insert id="insertWeatherDay" parameterType="com.suypower.venus.app.gs.entity.GsWeatherDay">
+        INSERT INTO gs_weather_day (
+	org_no,
+	city_id,
+	city_name,
+	city_name_pinyin,
+	wt_date,
+	wt_week,
+	wt_weather,
+	wt_weather_pinyin,
+	wt_air,
+	wt_air_level,
+	wt_air_tips,
+	wt_humidity,
+	wt_alram_type,
+	wt_alram_level,
+	wt_alarm_content,
+	wt_tem1,
+	wt_tem2,
+	wt_tem,
+	wt_v_tem1,
+	wt_v_tem2,
+	wt_v_tem,
+	wt_win,
+	wt_win_speed,
+	wt_win_v_speed,
+	wt_win_index,
+	wt_update_time
+)
+VALUES
+	(
+		'0000',
+		#{cityId},
+		#{cityName},
+		#{cityNamePinyin},
+		STR_TO_DATE(#{wtDate},'%Y-%m-%d'),
+		#{wtWeek},
+		#{wtWeather},
+		#{wtWeatherPinyin},
+		#{wtAir},
+		#{wtAirLevel},
+		#{wtAirTips},
+		#{wtHumidity},
+		#{wtAlarmType},
+		#{wtAlarmLevel},
+		#{wtAlarmContent},
+		#{wtTem1},
+		#{wtTem2},
+		#{wtTem},
+		#{wtVTem1},
+		#{wtVTem2},
+		#{wtVTem},
+		#{wtWin},
+		#{wtWinSpeed},
+		#{wtWinVSpeed},
+		NULL,
+		now()
+	)
+    </insert>
+    <!--更新气象数据(小时)-->
+    <update id="updateWeatherHour" parameterType="com.suypower.venus.app.gs.entity.GsWeatherHour">
+            UPDATE gs_weather_hour
+            <set>
+                org_no = '0000',
+                city_id = #{cityId},
+                city_name = #{cityName},
+                city_name_pinyin = #{cityNamePinyin},
+                wh_date = #{whDate},
+                wh_week = #{whWeek},
+                wh_hour = #{whHour},
+                wh_weather = #{whWeather},
+                wh_weather_pingyin = #{whWeatherPinyin},
+                wh_tem = #{whTem},
+                wh_v_tem = #{whVTem},
+                wh_win = #{whWin},
+                wh_win_speed = #{whWinSpeed},
+                wh_win_v_speed = #{whWinVSpeed},
+                wh_update_time = NOW()
+            </set>
+            <where>
+                city_id=#{cityId} and wh_date = #{whDate}
+                and wh_hour = #{whHour}
+            </where>
+
+    </update>
+    <!--    新增象数据(小时) -->
+    <insert id="insertWeatherHour" parameterType="com.suypower.venus.app.gs.entity.GsWeatherHour">
+              INSERT INTO gs_weather_hour (
+            org_no,
+            city_id,
+            city_name,
+            city_name_pinyin,
+            wh_date,
+            wh_week,
+            wh_hour,
+            wh_weather,
+            wh_weather_pingyin,
+            wh_tem,
+            wh_v_tem,
+            wh_win,
+            wh_win_speed,
+            wh_win_v_speed,
+            wh_update_time
+
+        )
+        VALUES
+            (
+                '0000',
+                #{cityId},
+                #{cityName},
+                    #{cityNamePinyin},
+                    #{whDate},
+                    #{whWeek},
+                    #{whHour},
+                    #{whWeather},
+                    #{whWeatherPinyin},
+                    #{whTem},
+                    #{whVTem},
+                    #{whWin},
+                    #{whWinSpeed},
+                    #{whWinVSpeed},
+                    NOW()
+                )
+    </insert>
+
+</mapper>
+

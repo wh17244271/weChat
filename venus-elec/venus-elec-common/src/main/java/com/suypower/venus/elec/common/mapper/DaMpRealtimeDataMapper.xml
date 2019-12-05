@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.suypower.venus.elec.common.dao.DaMpRealtimeDataDao">
+
+    <resultMap id="daMpRealtimeDataMap" type="com.suypower.venus.elec.common.entity.DaMpRealtimeData">
+        <result column="MP_ID" property="mpId"/>
+        <result column="MP_NAME" property="mpName"/>
+        <result column="MP_NO" property="mpNo"/>
+        <result column="CONS_NO" property="consNo"/>
+
+        <collection property="data" ofType="com.suypower.venus.elec.common.entity.DaDataItem"
+                    select="queryDaDataItem" column="{mpId=MP_ID,consNo=CONS_NO,now=NOW}"/>
+
+    </resultMap>
+
+    <resultMap id="daDataItemMap" type="com.suypower.venus.elec.common.entity.DaDataItem">
+        <id column="IND_B_NO" property="indBNo"/>
+        <result column="val" property="value"/>
+    </resultMap>
+
+    <!-- 查询 mp信息 通过 mpId,consNo -->
+    <select id="queryRealtimeData" resultMap="daMpRealtimeDataMap">
+        SELECT
+        mp.MP_ID ,
+        mp.MP_NAME ,
+        mp.MP_NO ,
+        mp.CONS_NO,
+        #{now} AS NOW
+        FROM
+        DC_MP_INFO mp
+        <where>
+            <if test="mpId != null and mpId != ''">
+                mp.MP_ID = #{mpId}
+            </if>
+            <if test="consNo != null and consNo != ''">
+                AND mp.CONS_NO = #{consNo}
+            </if>
+        </where>
+
+    </select>
+
+    <!--    查询 mp 的实时数据通过 mpId,consNo,now-->
+    <select id="queryDaDataItem" resultMap="daDataItemMap">
+
+        SELECT
+        base.IND_B_NO,
+        init.val
+        FROM
+        (
+        SELECT
+        IND_B_NO,
+        max(FREEZING_TIME) FREEZING_TIME,
+        CONS_NO,
+        MP_ID
+        FROM
+        dc_meta_raw_data_info
+        <where>
+            <if test="mpId != null and mpId != ''">
+                mp_id = #{mpId}
+            </if>
+            <if test="consNo != null and consNo != ''">
+                AND CONS_NO = #{consNo}
+            </if>
+            <if test="now != null and now != ''">
+                AND DATE_FORMAT(
+                FREEZING_TIME,
+                '%Y-%m-%d %H:%i'
+                ) >= DATE_FORMAT(
+                #{now},
+                '%Y-%m-%d %H:%i'
+                )
+            </if>
+
+        </where>
+
+        GROUP BY
+        IND_B_NO,
+        CONS_NO,
+        MP_ID
+        ) base
+        JOIN dc_meta_raw_data_info init ON base.IND_B_NO = init.IND_B_NO
+        AND base.FREEZING_TIME = init.FREEZING_TIME
+        AND base.CONS_NO = init.CONS_NO
+        AND base.MP_ID = init.MP_ID
+
+
+    </select>
+
+</mapper>

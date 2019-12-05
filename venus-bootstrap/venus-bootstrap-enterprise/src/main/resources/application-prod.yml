@@ -1,0 +1,8 @@
+spring:
+       datasource:
+              type:  com.alibaba.druid.pool.DruidDataSource
+              dialect: mysql
+              driverClassName: com.mysql.jdbc.Driver
+              url: jdbc:mysql://10.3.0.14:3306/dracc_app?characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+              username: dracc
+              password: suypower123!

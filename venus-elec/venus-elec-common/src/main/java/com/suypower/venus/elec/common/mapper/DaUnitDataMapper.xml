@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.suypower.venus.elec.common.dao.DaUnitDataDao">
+    <!--DA_UNIT_GATHER_DATA 表基础字段 -->
+    <sql id="baseColumn">
+        gatherData.CONS_NO AS consNo,
+        gatherData.UNIT_ID AS unitId,
+        gatherData.IND_B_NO AS indBNo,
+        gatherData.DATA_DATE AS dataDate,
+        gatherData.MONTH AS month,
+        gatherData.LAST_TIME AS lastTime,
+        gatherData.LAST_VAL AS lastVal,
+        gatherData.MIN_TIME AS minTime,
+        gatherData.MIN_VAL AS minVal,
+        gatherData.MAX_TIME AS maxTime,
+        gatherData.MAX_VAL AS maxVal,
+        gatherData.AVG_VAL AS avgVal
+    </sql>
+
+    <!--  获取单元日数据  -->
+    <!--    获取企业单元日数据-->
+    <select id="queryUnitDayData" resultType="java.util.LinkedHashMap">
+        SELECT
+        consInfo.CONS_NAME,
+        unitInfo.UNIT_NO,
+        unitInfo.UNIT_NAME,
+        typeInfo.U_TYPE_NO,
+        gatherData.*
+        FROM
+        (
+        select gatherData.* FROM DA_UNIT_GATHER_DATA gatherData
+        where 1=1
+        <if test="unitId != null and unitId != ''">
+            AND gatherData.UNIT_ID = #{unitId}
+        </if>
+        <if test="consNo != null and consNo != ''">
+            AND gatherData.CONS_NO = #{consNo}
+        </if>
+        <if test="indexes != null and indexes != ''">
+            AND gatherData.IND_B_NO IN
+            <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                #{item.indBNo}
+            </foreach>
+        </if>
+        <if test="dates != null and dates != ''">
+            AND gatherData.DATA_DATE in
+            <foreach collection="dates" item="dateses" open="(" separator="," close=")">
+                DATE_FORMAT(CONCAT(#{dateses.year},'-',#{dateses.month},'-',#{dateses.day}),'%Y-%m-%d')
+            </foreach>
+        </if>
+        )as gatherData
+        JOIN CS_UNIT_INFO unitInfo ON gatherData.UNIT_ID = unitInfo.UNIT_ID
+        JOIN CS_UNIT_TYPE_INFO typeInfo ON typeInfo.U_TYPE_NO = unitInfo.U_TYPE_NO
+        AND typeInfo. STATUS = '1'
+        JOIN CS_H_CONS_INFO consInfo ON consInfo.CONS_NO = gatherData.CONS_NO
+        WHERE 1=1
+
+        <if test="unitTypes != null and unitTypes != ''">
+            AND unitInfo.U_TYPE_NO IN
+            <foreach collection="unitTypes" item="item" open="(" separator="," close=")">
+                #{item.uintTypeNo}
+            </foreach>
+        </if>
+
+
+    </select>
+
+    <!--  获取单元日最值数据 -->
+    <!--    获取企业单元日最值数据-->
+    <select id="queryUnitDayMostData" resultType="com.suypower.venus.elec.common.entity.DaUnitDayMostData">
+        SELECT
+        consInfo.CONS_NAME as consName,
+        unitInfo.UNIT_NO as unitNo,
+        unitInfo.UNIT_NAME as unitName,
+        typeInfo.U_TYPE_NO as uTypeNo,
+        gatherData.consNo,
+        gatherData.unitId,
+        gatherData.indBNo,
+        gatherData.dataDate,
+        gatherData.month,
+        gatherData.lastTime,
+        gatherData.lastVal,
+        gatherData.minTime,
+        gatherData.minVal,
+        gatherData.maxTime,
+        gatherData.maxVal,
+        gatherData.avgVal
+        FROM (
+        select
+        <include refid="baseColumn"/>
+        from
+        DA_UNIT_GATHER_DATA gatherData
+        where 1=1
+        <if test="unitId != null and unitId != ''">
+            AND gatherData.UNIT_ID = #{unitId}
+        </if>
+        <if test="consNo != null and consNo != ''">
+            AND gatherData.CONS_NO = #{consNo}
+        </if>
+        <if test="indexes != null and indexes != ''">
+            AND gatherData.IND_B_NO IN
+            <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                #{item.indBNo}
+            </foreach>
+        </if>
+        <if test="dates != null and dates != ''">
+            AND gatherData.DATA_DATE in
+            <foreach collection="dates" item="dateses" open="(" separator="," close=")">
+                DATE_FORMAT(CONCAT(#{dateses.year},'-',#{dateses.month},'-',#{dateses.day}),'%Y-%m-%d')
+            </foreach>
+        </if>
+        )as gatherData
+        JOIN CS_UNIT_INFO unitInfo ON gatherData.unitId = unitInfo.UNIT_ID
+        JOIN CS_UNIT_TYPE_INFO typeInfo ON typeInfo.U_TYPE_NO = unitInfo.U_TYPE_NO
+        AND typeInfo. STATUS = '1'
+        JOIN CS_H_CONS_INFO consInfo ON consInfo.CONS_NO = gatherData.consNo
+        WHERE 1=1
+        <if test="unitTypes != null and unitTypes != ''">
+            AND unitInfo.U_TYPE_NO IN
+            <foreach collection="unitTypes" item="item" open="(" separator="," close=")">
+                #{item.uintTypeNo}
+            </foreach>
+        </if>
+
+
+    </select>
+
+
+    <sql id="powerBase">
+        powerData.IND_B_NO AS indBNo,
+        powerData.SP_Q AS tip,
+        powerData.P_Q AS peak,
+        powerData.M_Q AS flat,
+        powerData.V_Q AS valley,
+        powerData.TOTAL_Q AS total,
+        powerData.CONS_NO AS consNo ,
+        powerData.UNIT_ID AS unitId
+    </sql>
+
+    <!--    获取单元日用量数据-->
+    <!--    获取企业单元日用量数据-->
+    <select id="queryUnitDayDosageData" resultType="com.suypower.venus.elec.common.entity.DaUnitDayDosageData">
+        SELECT
+        consInfo.CONS_NAME as consName,
+        unitInfo.UNIT_NO as unitNo,
+        unitInfo.UNIT_NAME as unitName,
+        typeInfo.U_TYPE_NO as uTypeNo,
+        powerData.indBNo,
+        powerData.tip,
+        powerData.peak,
+        powerData.flat,
+        powerData.valley,
+        powerData.total,
+        powerData.dataDate,
+        powerData.month,
+        powerData.consNo,
+        powerData.unitId
+
+        FROM (
+        select
+        powerData.DATA_DATE as dataDate,
+        powerData.MONTH as month,
+        <include refid="powerBase"/>
+        from
+        DA_UNIT_DAY_POWER_DATA powerData
+        where 1=1
+        <if test="unitId != null and unitId != ''">
+            AND powerData.UNIT_ID = #{unitId}
+        </if>
+        <if test="consNo != null and consNo != ''">
+            AND powerData.CONS_NO = #{consNo}
+        </if>
+        <if test="indexes != null and indexes != ''">
+            AND powerData.IND_B_NO IN
+            <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                #{item.indBNo}
+            </foreach>
+        </if>
+        <if test="dates != null and dates != ''">
+            AND powerData.DATA_DATE in
+            <foreach collection="dates" item="dateses" open="(" separator="," close=")">
+                DATE_FORMAT(CONCAT(#{dateses.year},'-',#{dateses.month},'-',#{dateses.day}),'%Y-%m-%d')
+            </foreach>
+        </if>
+        )as powerData
+        JOIN CS_UNIT_INFO unitInfo ON powerData.unitId = unitInfo.UNIT_ID
+        JOIN CS_UNIT_TYPE_INFO typeInfo ON typeInfo.U_TYPE_NO = unitInfo.U_TYPE_NO
+        AND typeInfo. STATUS = '1'
+        JOIN CS_H_CONS_INFO consInfo ON consInfo.CONS_NO = powerData.consNo
+        WHERE 1=1
+        <if test="unitTypes != null and unitTypes != ''">
+            AND unitInfo.U_TYPE_NO IN
+            <foreach collection="unitTypes" item="item" open="(" separator="," close=")">
+                #{item.uintTypeNo}
+            </foreach>
+        </if>
+    </select>
+
+
+    <!--  获取单元月数据 -->
+    <!--    获取企业单元月数据-->
+    <select id="queryUnitMonthData" resultType="com.suypower.venus.elec.common.entity.DaUnitMonthData">
+        SELECT
+        consInfo.CONS_NAME as consName,
+        unitInfo.UNIT_NO as unitNo,
+        unitInfo.UNIT_NAME as unitName,
+        typeInfo.U_TYPE_NO as uTypeNo,
+        gatherData.dataMonth,
+        gatherData.indBNo,
+        gatherData.minTime,
+        gatherData.minVal,
+        gatherData.maxTime,
+        gatherData.maxVal,
+        gatherData.avgVal,
+        gatherData.consNo,
+        gatherData.unitId
+        FROM (
+        select
+        gatherData.DATA_MONTH as dataMonth,
+        gatherData.IND_B_NO AS indBNo,
+        gatherData.MIN_TIME AS minTime,
+        gatherData.MIN_VAL AS minVal,
+        gatherData.MAX_TIME AS maxTime,
+        gatherData.MAX_VAL AS maxVal,
+        gatherData.AVG_VAL AS avgVal,
+        gatherData.CONS_NO as consNo,
+        gatherData.UNIT_ID AS unitId
+        from
+        DA_UNIT_MONTH_LOAD_DATA gatherData
+        where 1=1
+        <if test="unitId != null and unitId != ''">
+            AND gatherData.UNIT_ID = #{unitId}
+        </if>
+        <if test="consNo != null and consNo != ''">
+            AND gatherData.CONS_NO = #{consNo}
+        </if>
+        <if test="indexes != null and indexes != ''">
+            AND gatherData.IND_B_NO IN
+            <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                #{item.indBNo}
+            </foreach>
+        </if>
+        <if test="dates != null and dates != ''">
+            AND left(STR_TO_DATE(gatherData.DATA_MONTH,'%Y-%m-%d'),7) in
+            <foreach collection="dates" item="item" open="(" separator="," close=")">
+                left(STR_TO_DATE(#{item},'%Y-%m-%d'),7)
+            </foreach>
+        </if>
+        )as gatherData
+        JOIN CS_UNIT_INFO unitInfo ON gatherData.unitId = unitInfo.UNIT_ID
+        JOIN CS_UNIT_TYPE_INFO typeInfo ON typeInfo.U_TYPE_NO = unitInfo.U_TYPE_NO
+        AND typeInfo. STATUS = '1'
+        JOIN CS_H_CONS_INFO consInfo ON consInfo.CONS_NO = gatherData.consNo
+        WHERE 1=1
+        <if test="unitTypes != null and unitTypes != ''">
+            AND unitInfo.U_TYPE_NO IN
+            <foreach collection="unitTypes" item="item" open="(" separator="," close=")">
+                #{item.uintTypeNo}
+            </foreach>
+        </if>
+
+
+    </select>
+
+
+    <!--  获取单元月用量数据 -->
+    <!--    获取企业单元月用量数据-->
+    <select id="queryUnitMonthDosageData" resultType="com.suypower.venus.elec.common.entity.DaUnitMonthDosageData">
+        SELECT
+        consInfo.CONS_NAME as consName,
+        unitInfo.UNIT_NO as unitNo,
+        unitInfo.UNIT_NAME as unitName,
+        typeInfo.U_TYPE_NO as uTypeNo,
+        powerData.dataMonth,
+        powerData.dataDate,
+        powerData.indBNo,
+        powerData.tip,
+        powerData.peak,
+        powerData.flat,
+        powerData.valley,
+        powerData.total,
+        powerData.consNo,
+        powerData.unitId
+        FROM (
+        select
+        powerData.DATA_MONTH as dataMonth,
+        powerData.DATA_DATE as dataDate,
+        <include refid="powerBase"/>
+        from
+        DA_UNIT_MONTH_POWER_DATA powerData
+        where 1=1
+        <if test="unitId != null and unitId != ''">
+            AND powerData.UNIT_ID = #{unitId}
+        </if>
+        <if test="consNo != null and consNo != ''">
+            AND powerData.CONS_NO = #{consNo}
+        </if>
+        <if test="indexes != null and indexes != ''">
+            AND powerData.IND_B_NO IN
+            <foreach collection="indexes" item="item" open="(" separator="," close=")">
+                #{item.indBNo}
+            </foreach>
+        </if>
+        <if test="dates != null and dates != ''">
+            AND left(STR_TO_DATE(powerData.DATA_MONTH,'%Y-%m-%d'),7) in
+            <foreach collection="dates" item="item" open="(" separator="," close=")">
+                left(STR_TO_DATE(#{item},'%Y-%m-%d'),7)
+            </foreach>
+        </if>
+        )as powerData
+        JOIN CS_UNIT_INFO unitInfo ON powerData.unitId = unitInfo.UNIT_ID
+        JOIN CS_UNIT_TYPE_INFO typeInfo ON typeInfo.U_TYPE_NO = unitInfo.U_TYPE_NO
+        AND typeInfo. STATUS = '1'
+        JOIN CS_H_CONS_INFO consInfo ON consInfo.CONS_NO = powerData.consNo
+        WHERE 1=1
+        <if test="unitTypes != null and unitTypes != ''">
+            AND unitInfo.U_TYPE_NO IN
+            <foreach collection="unitTypes" item="item" open="(" separator="," close=")">
+                #{item.uintTypeNo}
+            </foreach>
+        </if>
+
+
+    </select>
+
+
+</mapper>

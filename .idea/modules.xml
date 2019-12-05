@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/venus.iml" filepath="$PROJECT_DIR$/venus.iml" />
+      <module fileurl="file://$PROJECT_DIR$/venus-bootstrap/venus-bootstrap.iml" filepath="$PROJECT_DIR$/venus-bootstrap/venus-bootstrap.iml" />
+      <module fileurl="file://$PROJECT_DIR$/venus-platform/venus-platform.iml" filepath="$PROJECT_DIR$/venus-platform/venus-platform.iml" />
+    </modules>
+  </component>
+</project>
