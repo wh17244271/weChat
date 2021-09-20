@@ -30,7 +30,7 @@
         <apache.commons.version>3.9</apache.commons.version>
         <junit.version>4.0</junit.version>
         <mybatis.version>3.5.0</mybatis.version>
-        <shiro.version>1.4.0</shiro.version>
+        <shiro.version>1.8.0</shiro.version>
         <!--拼音组件-->
         <pinyin4j.version>2.5.0</pinyin4j.version>
         <alibaba.fastjson.version>1.2.44</alibaba.fastjson.version>
