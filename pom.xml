@@ -33,7 +33,7 @@
         <shiro.version>1.4.0</shiro.version>
         <!--拼音组件-->
         <pinyin4j.version>2.5.0</pinyin4j.version>
-        <alibaba.fastjson.version>1.2.44</alibaba.fastjson.version>
+        <alibaba.fastjson.version>1.2.83</alibaba.fastjson.version>
         <alibaba.druid.version>1.0.25</alibaba.druid.version>
     </properties>
 
