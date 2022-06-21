@@ -26,7 +26,7 @@
         <!--定义电力模块版本-->
         <venus.elec.version>1.0</venus.elec.version>
         <springboot.version>2.1.6.RELEASE</springboot.version>
-        <mysql.version>8.0.16</mysql.version>
+        <mysql.version>8.0.28</mysql.version>
         <apache.commons.version>3.9</apache.commons.version>
         <junit.version>4.0</junit.version>
         <mybatis.version>3.5.0</mybatis.version>
